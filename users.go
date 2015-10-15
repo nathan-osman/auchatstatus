@@ -1,41 +1,66 @@
 package main
 
-import ()
+import (
+	"github.com/gorilla/websocket"
 
-// Information received from the client
-type Ping struct {
-	UserID           int `json:"user_id"`
-	LastMessageID    int `json:"last_message_id"`
-	LastKeypressTime int `json:"last_keypress_time"`
+	"sync"
+	"time"
+)
+
+// Current state of a user.
+type State struct {
+	Id              int
+	LastMessageSeen int
+	LastCharEntered time.Time
 }
 
-// Represents an individual chat user
+// An individual chat user connected via a websocket.
 type User struct {
-	UserID           int `json:"user_id"`
-	LastMessageId    int `json:"last_message_id"`
-	LastKeypressTime int `json:"last_keypress_time"`
-	LastPing         int `json:"last_ping"`
+	sync.Mutex
+	conn         *websocket.Conn
+	state        State
+	stateChanged chan<- *User
+	socketError  chan<- *User
 }
 
-// List of current chat users
-type Users struct {
-	Users []*User `json:"users"`
-}
-
-// When a ping is received, record the information
-func (u *Users) Ping(ping *Ping) {
-	var user *User
-	for _, i := range u.Users {
-		if i.UserID == ping.UserID {
-			user = i
+// Process messages from the socket.
+func (u *User) processMessages() {
+	for {
+		var newState State
+		if err := u.conn.ReadJSON(&newState); err != nil {
+			break
 		}
+		u.Lock()
+		u.state = newState
+		u.Unlock()
+		u.stateChanged <- u
 	}
-	if user == nil {
-		user = &User{}
-		u.Users = append(u.Users, user)
+	u.socketError <- u
+}
+
+// Initialize a User instance from a newly connected websocket client.
+func NewUser(conn *websocket.Conn, stateChanged chan<- *User, socketError chan<- *User) *User {
+	u := &User{
+		conn:         conn,
+		stateChanged: stateChanged,
+		socketError:  socketError,
 	}
-	user.UserID = ping.UserID
-	user.LastMessageId = ping.LastMessageID
-	user.LastKeypressTime = ping.LastKeypressTime
-	user.LastPing = 0
+	go u.processMessages()
+	return u
+}
+
+// Retrieve the current state of the user.
+func (u *User) State() State {
+	u.Lock()
+	defer u.Unlock()
+	return u.state
+}
+
+// Notify the user that another user's state has changed. An error results in
+// the assumption the socket has been closed and the appropriate notification
+// is then sent.
+func (u *User) Send(state State) {
+	if err := u.conn.WriteJSON(state); err != nil {
+		u.socketError <- u
+	}
 }

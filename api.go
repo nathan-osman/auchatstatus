@@ -1,33 +1,101 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"strconv"
+	"sync"
 )
 
-// The API is stupidly simple - there is a single method that is invoked by the
-// client, named /ping. It serves two purposes - the first is to indicate its
-// status to the server and the second is to retrieve the status of other
-// users. Certain actions trigger the ping, otherwise it is run at regular
-// intervals to keep things up-to-date.
+// Public API used for communication between clients.
+type API struct {
+	sync.Mutex
+	server       *http.Server
+	upgrader     *websocket.Upgrader
+	users        []*User
+	stateChanged chan *User
+	socketError  chan *User
+}
 
-func PingHandler(users *Users) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			decoder = json.NewDecoder(r.Body)
-			ping    Ping
-		)
-		if err := decoder.Decode(&ping); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		users.Ping(&ping)
-		data, err := json.Marshal(users)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+// Upgrade the connection to websocket.
+func (a *API) connect(w http.ResponseWriter, r *http.Request) {
+	if conn, err := a.upgrader.Upgrade(w, r, nil); err == nil {
+		a.Lock()
+		a.users = append(a.users, NewUser(conn, a.stateChanged, a.socketError))
+		a.Unlock()
+	} else {
+		log.Println(err)
 	}
+}
+
+// Report the current version of the server.
+func (a *API) version(w http.ResponseWriter, r *http.Request) {
+	if data, err := json.Marshal(map[string]interface{}{
+		"version": "1.0",
+	}); err == nil {
+		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+	} else {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
+}
+
+// Wait for a notification from a user and broadcast it to the others.
+func (a *API) notifyUsers() {
+	for {
+		changedUser := <-a.stateChanged
+		a.Lock()
+		for _, u := range a.users {
+			u.Send(changedUser.State())
+		}
+		a.Unlock()
+	}
+}
+
+// Wait for a request that a user be removed from the list.
+func (a *API) removeUser() {
+	for {
+		removedUser := <-a.socketError
+		a.Lock()
+		for i, u := range a.users {
+			if u == removedUser {
+				a.users = append(a.users[:i], a.users[i+1:]...)
+			}
+		}
+		a.Unlock()
+	}
+}
+
+// Create a new instance of the API.
+func NewAPI(port int) *API {
+	var (
+		a = &API{
+			server: &http.Server{
+				Addr: fmt.Sprintf("0.0.0.0:%d", port),
+			},
+			upgrader:     &websocket.Upgrader{},
+			users:        make([]*User, 0),
+			stateChanged: make(chan *User),
+			socketError:  make(chan *User),
+		}
+		router = mux.NewRouter()
+	)
+	router.HandleFunc("/api/connect", a.connect)
+	router.HandleFunc("/api/version", a.version)
+	a.server.Handler = router
+	go a.notifyUsers()
+	go a.removeUser()
+	return a
+}
+
+// Listen for new connections.
+func (a *API) Listen() error {
+	return a.server.ListenAndServe()
 }
