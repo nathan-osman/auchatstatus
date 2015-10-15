@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/websocket"
 
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 type API struct {
 	sync.Mutex
 	server       *http.Server
+	router       *mux.Router
 	upgrader     *websocket.Upgrader
 	users        []*User
 	stateChanged chan *User
@@ -25,8 +25,12 @@ type API struct {
 // Upgrade the connection to websocket.
 func (a *API) connect(w http.ResponseWriter, r *http.Request) {
 	if conn, err := a.upgrader.Upgrade(w, r, nil); err == nil {
+		newUser := NewUser(conn, a.stateChanged, a.socketError)
 		a.Lock()
-		a.users = append(a.users, NewUser(conn, a.stateChanged, a.socketError))
+		for _, u := range a.users {
+			newUser.Send(u.State())
+		}
+		a.users = append(a.users)
 		a.Unlock()
 	} else {
 		log.Println(err)
@@ -74,25 +78,31 @@ func (a *API) removeUser() {
 }
 
 // Create a new instance of the API.
-func NewAPI(port int) *API {
-	var (
-		a = &API{
-			server: &http.Server{
-				Addr: fmt.Sprintf("0.0.0.0:%d", port),
-			},
-			upgrader:     &websocket.Upgrader{},
-			users:        make([]*User, 0),
-			stateChanged: make(chan *User),
-			socketError:  make(chan *User),
-		}
-		router = mux.NewRouter()
-	)
-	router.HandleFunc("/api/connect", a.connect)
-	router.HandleFunc("/api/version", a.version)
-	a.server.Handler = router
+func NewAPI(addr string) *API {
+	a := &API{
+		server: &http.Server{
+			Addr: addr,
+		},
+		router: mux.NewRouter(),
+		upgrader: &websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
+		users:        make([]*User, 0),
+		stateChanged: make(chan *User),
+		socketError:  make(chan *User),
+	}
+	a.server.Handler = a
+	a.router.HandleFunc("/api/connect", a.connect)
+	a.router.HandleFunc("/api/version", a.version)
 	go a.notifyUsers()
 	go a.removeUser()
 	return a
+}
+
+// Process an incoming request, setting CORS headers where possible.
+func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	a.router.ServeHTTP(w, r)
 }
 
 // Listen for new connections.

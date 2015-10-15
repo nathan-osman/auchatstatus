@@ -9,9 +9,9 @@ import (
 
 // Current state of a user.
 type State struct {
-	Id              int
-	LastMessageSeen int
-	LastCharEntered time.Time
+	Id              int       `json:"id"`
+	LastMessageSeen int       `json:"last_message_seen"`
+	LastCharEntered time.Time `json:"last_char_entered"`
 }
 
 // An individual chat user connected via a websocket.
