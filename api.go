@@ -30,7 +30,7 @@ func (a *API) connect(w http.ResponseWriter, r *http.Request) {
 		for _, u := range a.users {
 			newUser.Send(u.State())
 		}
-		a.users = append(a.users)
+		a.users = append(a.users, newUser)
 		a.Unlock()
 	} else {
 		log.Println(err)

@@ -3,15 +3,15 @@ package main
 import (
 	"github.com/gorilla/websocket"
 
+	"encoding/json"
 	"sync"
-	"time"
 )
 
 // Current state of a user.
 type State struct {
-	Id              int       `json:"id"`
-	LastMessageSeen int       `json:"last_message_seen"`
-	LastCharEntered time.Time `json:"last_char_entered"`
+	Id              int `json:"id"`
+	LastMessageSeen int `json:"last_message_seen"`
+	LastCharEntered int `json:"last_char_entered"`
 }
 
 // An individual chat user connected via a websocket.
@@ -26,16 +26,22 @@ type User struct {
 // Process messages from the socket.
 func (u *User) processMessages() {
 	for {
-		var newState State
-		if err := u.conn.ReadJSON(&newState); err != nil {
+		if messageType, r, err := u.conn.NextReader(); err == nil {
+			switch messageType {
+			case websocket.TextMessage:
+				var newState State
+				if err := json.NewDecoder(r).Decode(&newState); err == nil {
+					u.Lock()
+					u.state = newState
+					u.Unlock()
+					u.stateChanged <- u
+				}
+			}
+		} else {
+			u.socketError <- u
 			break
 		}
-		u.Lock()
-		u.state = newState
-		u.Unlock()
-		u.stateChanged <- u
 	}
-	u.socketError <- u
 }
 
 // Initialize a User instance from a newly connected websocket client.
