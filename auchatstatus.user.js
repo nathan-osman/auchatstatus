@@ -56,25 +56,10 @@ withjQuery(function($) {
                     notify('Received corrupt version number from the chat status API.');
                 }
             },
-            url: 'https://127.0.0.1:8000/api/version'
+            url: 'https://auchat.quickmediasolutions.com/api/version'
         });
     }
     updateCheck();
-
-    // Monitor the input field for key presses. If this is the first keypress
-    // during the last second, immediately notify everyone. This prevents a
-    // message being sent for every keypress.
-    var lastCharEntered = 0;
-    $('#input').keypress(function() {
-        var n = now();
-        if(lastCharEntered < (n - 1)) {
-            socket.send(JSON.stringify({
-                id: CHAT.CURRENT_USER_ID,
-                last_char_entered: n
-            }));
-            lastCharEntered = n;
-        }
-    });
 
     // Add the element that will display typing status.
     $('#chat').css('paddingBottom', '0');
@@ -124,7 +109,24 @@ withjQuery(function($) {
     }
 
     // Establish a websocket connection.
-    var socket = new WebSocket('wss://127.0.0.1:8000/api/connect');
+    var socket = new WebSocket('wss://auchat.quickmediasolutions.com/api/connect');
+
+    socket.onopen = function() {
+        // Monitor the input field for key presses. If this is the first keypress
+        // during the last second, immediately notify everyone. This prevents a
+        // message being sent for every keypress.
+        var lastCharEntered = 0;
+        $('#input').keypress(function() {
+            var n = now();
+            if(lastCharEntered < (n - 1)) {
+                socket.send(JSON.stringify({
+                    id: CHAT.CURRENT_USER_ID,
+                    last_char_entered: n
+                }));
+                lastCharEntered = n;
+            }
+        });
+    }
 
     // Process new messages received on the socket - note that all packets are
     // assumed valid - invalid ones will generate an error but won't prevent
