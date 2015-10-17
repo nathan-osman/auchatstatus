@@ -16,6 +16,9 @@ function withjQuery(fn) {
 
 withjQuery(function($) {
 
+    // Constants.
+    var SERVER = 'auchat.quickmediasolutions.com';
+
     // Retrieve the current UTC time as a Unix timestamp.
     function now() {
         return parseInt(new Date().getTime() / 1000);
@@ -48,15 +51,24 @@ withjQuery(function($) {
             },
             success: function(data) {
                 if('version' in data) {
-                    if(data.version != '1.0') {
-                        notify('New version of the chat status script available.<br>' +
-                            'Please upgrade as soon as possible.');
+                    if(data.version != '1.1') {
+                        var msg = "<p><a href='https://github.com/nathan-osman/auchatstatus/raw/master/auchatstatus.user.js'>" +
+                                "New version</a> of the chat status script available.<br>Please update as soon as possible.</p>";
+                        if('changes' in data) {
+                            msg += '<ul>';
+                            $.each(data.changes, function(i, v) {
+                                // v is HTML-escaped on the server
+                                msg += '<li>' + v + '</li>';
+                            });
+                            msg += '</ul>';
+                        }
+                        notify(msg);
                     }
                 } else {
                     notify('Received corrupt version number from the chat status API.');
                 }
             },
-            url: 'https://auchat.quickmediasolutions.com/api/version'
+            url: 'https://' + SERVER + '/api/version'
         });
     }
     updateCheck();
@@ -67,7 +79,7 @@ withjQuery(function($) {
             .css({
                 color: 'rgba(0, 0, 0, 0.5)',
                 height: '20px',
-                paddingBottom: '100px',
+                paddingBottom: '90px',
                 paddingLeft: '70px',
                 paddingTop: '10px'
             })
@@ -77,72 +89,118 @@ withjQuery(function($) {
             .text('is typing...')
             .appendTo(typingStatus);
 
-    // Add a user to the list displayed - their info may need to be fetched
-    var userTypingTimeouts = {};
-    function userTyping(id) {
-        var elemId = 'acs-typing-' + id,
-            elem = $('#' + elemId);
-        if(!elem.length) {
-            CHAT.RoomUsers.get(id).then(function(u) {
-                elem = $('<img>')
-                    .addClass('acs-typing-avatar')
-                    .attr({
-                        id: elemId,
-                        src: avatar(u)
-                    }).css({
-                        float: 'left',
-                        paddingRight: '4px'
-                    });
+    // Establish a websocket connection.
+    function connect() {
+        var socket = new WebSocket('wss://' + SERVER + '/api/connect');
+
+        // JavaScript doesn't let us send ping/pong control messages, so
+        // instead, just send an empty message and the server will reply with
+        // an empty message.
+        var pingTimeout;
+        function ping() {
+            socket.send('');
+            pingTimeout = window.setTimeout(ping, 30000);
+        }
+
+        // The status API will send a message when a user types a character. To
+        // avoid a bunch of unnecessary messages, this message is only sent a
+        // maximum of once per two seconds. Therefore the "xyz is typing..."
+        // indicator must assume the user is typing for up to four seconds
+        // after having received the last such update.
+        var usersTyping = {};
+
+        // A user has stopped typing (the timeout expired). The indicator
+        // should be hidden if no more users are typing - and there's a small
+        // hack to figure that out.
+        function userTypingStopped(id) {
+            usersTyping[id].remove();
+            delete usersTyping[id];
+            var anyUsersTyping = false;
+            $.each(usersTyping, function() {
+                anyUsersTyping = true;
+                return false;
             });
-        }
-        elem.detach().prependTo(typingStatus).show();
-        typingIndicator.show();
-        if(id in userTypingTimeouts) {
-            window.clearTimeout(userTypingTimeouts[id]);
-        }
-        userTypingTimeouts[id] = window.setTimeout(function() {
-            elem.remove();
-            if(!$('.acs-typing-avatar').length) {
+            if(!anyUsersTyping) {
                 typingIndicator.hide();
             }
-        }, 8000);
-    }
+        }
 
-    // Establish a websocket connection.
-    var socket = new WebSocket('wss://auchat.quickmediasolutions.com/api/connect');
+        // A user has started typing. Create the element for the indicator if
+        // one does not already exist. If one does, reset the timeout.
+        function userTypingStarted(id) {
+            var elem;
+            if(id in usersTyping) {
+                elem = usersTyping[id];
+                window.clearTimeout(elem.data('timeout'));
+            } else {
+                elem = $('<img>')
+                    .addClass('acs-typing-avatar')
+                    .css({
+                        float: 'left',
+                        height: '16px',
+                        paddingRight: '4px',
+                        width: '16px'
+                    });
+                usersTyping[id] = elem;
+                CHAT.RoomUsers.get(id).then(function(u) {
+                    elem.attr('src', avatar(u));
+                });
+            }
+            elem.detach().prependTo(typingStatus).show();
+            typingIndicator.show();
+            elem.data('timeout', window.setTimeout(userTypingStopped, 4000, id));
+        }
 
-    socket.onopen = function() {
-        // Monitor the input field for key presses. If this is the first keypress
-        // during the last second, immediately notify everyone. This prevents a
-        // message being sent for every keypress.
+        // The user typed a message.
         var lastCharEntered = 0;
-        $('#input').keypress(function() {
+        function userTyped() {
             var n = now();
-            if(lastCharEntered < (n - 1)) {
+            if(lastCharEntered < (n - 2)) {
                 socket.send(JSON.stringify({
                     id: CHAT.CURRENT_USER_ID,
-                    last_char_entered: n
+                    data: {
+                        last_char_entered: n.toString()
+                    }
                 }));
                 lastCharEntered = n;
             }
-        });
-    }
-
-    // Process new messages received on the socket - note that all packets are
-    // assumed valid - invalid ones will generate an error but won't prevent
-    // more from being processed in the future
-    socket.onmessage = function(e) {
-        var s = JSON.parse(e.data);
-        if('last_char_entered' in s && s.last_char_entered > (now() - 5)) {
-            userTyping(s.id);
         }
-    };
 
-    socket.onerror = function(e) {
-        console.log(e);
-    };
+        // Monitor the input field for key presses. If this is the first
+        // keypress during the last two seconds, immediately notify everyone.
+        // This prevents a message being sent for every keypress.
+        socket.onopen = function() {
+            console.log("Connection to server established.")
+            ping();
+            $('#input').on('keypress', userTyped);
+        }
 
-    socket.onclose = function() {
-        console.log("Socket closing...");
+        // Process new messages received on the socket - note that all packets are
+        // assumed valid - invalid ones will generate an error but won't prevent
+        // more from being processed in the future.
+        socket.onmessage = function(e) {
+            if(e.data.length) {
+                var s = JSON.parse(e.data);
+                if('last_char_entered' in s.data &&
+                        s.data.last_char_entered > (now() - 5)) {
+                    userTypingStarted(s.id);
+                }
+            }
+        };
+
+        // TODO: better error handling (no idea when this gets called)
+        socket.onerror = function(e) {
+            console.log(e);
+        };
+
+        // Assume the server is restarting or something and try to reconnect in
+        // one minute intervals. Cancel some pending timeouts.
+        socket.onclose = function() {
+            console.log("Server closed connection.");
+            $('#input').off('keypress', userTyped);
+            window.clearTimeout(pingTimeout);
+            window.setTimeout(connect, 60000);
+        }
     }
+    connect();
 });

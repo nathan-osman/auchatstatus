@@ -18,7 +18,7 @@ type API struct {
 	router       *mux.Router
 	upgrader     *websocket.Upgrader
 	users        []*User
-	stateChanged chan *User
+	stateChanged chan State
 	socketError  chan *User
 }
 
@@ -40,7 +40,7 @@ func (a *API) connect(w http.ResponseWriter, r *http.Request) {
 // Report the current version of the server.
 func (a *API) version(w http.ResponseWriter, r *http.Request) {
 	if data, err := json.Marshal(map[string]interface{}{
-		"version": "1.0",
+		"version": "1.1",
 	}); err == nil {
 		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 		w.Header().Set("Content-Type", "application/json")
@@ -51,13 +51,13 @@ func (a *API) version(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Wait for a notification from a user and broadcast it to the others.
-func (a *API) notifyUsers() {
+// Propagate state changes to other users.
+func (a *API) propagateState() {
 	for {
-		changedUser := <-a.stateChanged
+		state := <-a.stateChanged
 		a.Lock()
 		for _, u := range a.users {
-			u.Send(changedUser.State())
+			u.Send(state)
 		}
 		a.Unlock()
 	}
@@ -88,13 +88,13 @@ func NewAPI(addr string) *API {
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
 		users:        make([]*User, 0),
-		stateChanged: make(chan *User),
+		stateChanged: make(chan State),
 		socketError:  make(chan *User),
 	}
 	a.server.Handler = a
 	a.router.HandleFunc("/api/connect", a.connect)
 	a.router.HandleFunc("/api/version", a.version)
-	go a.notifyUsers()
+	go a.propagateState()
 	go a.removeUser()
 	return a
 }
