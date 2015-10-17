@@ -100,7 +100,7 @@ withjQuery(function($) {
         if(id in userTypingTimeouts) {
             window.clearTimeout(userTypingTimeouts[id]);
         }
-        window.setTimeout(function() {
+        userTypingTimeouts[id] = window.setTimeout(function() {
             elem.remove();
             if(!$('.acs-typing-avatar').length) {
                 typingIndicator.hide();
