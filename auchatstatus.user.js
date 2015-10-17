@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ask Ubuntu Chat Status
 // @author        Nathan Osman
-// @version       1.0
+// @version       1.1
 // @namespace     https://quickmediasolutions.com
 // @description   A UserScript for displaying the status of other users in chat.
 // @include       http://chat.stackexchange.com/rooms/201/*
