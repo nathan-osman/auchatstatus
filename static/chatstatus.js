@@ -203,7 +203,7 @@
     function broadcastLastMessageRead() {
         if(isActive()) {
             var msgId = messageId($('.message').last());
-            if(msgId > lastMessageRead) {
+            if(parseInt(msgId) > parseInt(lastMessageRead)) {
                 lastMessageRead = msgId;
                 DEBUG && log("last_message_read: " + lastMessageRead);
                 socket.send(JSON.stringify({
