@@ -157,7 +157,7 @@
     var socket,
         lastTypingMsg = 0,
         lastMessageRead = 0,
-        windowActive = false;
+        windowActive = true;
 
     /**
      * Determine if the socket is active.
