@@ -278,17 +278,13 @@
     function onmessage(e) {
         if(e.data.length) {
             DEBUG && log("msg: " + e.data);
-            try {
-                var s = JSON.parse(e.data);
-                if('last_char_entered' in s.data &&
-                        s.data.last_char_entered > (now() - 4)) {
-                    userStartedTyping(s.id);
-                }
-                if('last_message_read' in s.data) {
-                    updateUserMessage(s.id, s.data.last_message_read);
-                }
-            } catch(e) {
-                log("message error: " + e);
+            var s = JSON.parse(e.data);
+            if('last_char_entered' in s.data &&
+                    s.data.last_char_entered > (now() - 4)) {
+                userStartedTyping(s.id);
+            }
+            if('last_message_read' in s.data) {
+                updateUserMessage(s.id, s.data.last_message_read);
             }
         }
     }
