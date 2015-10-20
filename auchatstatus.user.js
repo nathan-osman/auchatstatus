@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          Stack Exchange Chat Status
+// @name          Ask Ubuntu Chat Status
 // @author        Nathan Osman
 // @version       1.2
 // @namespace     https://quickmediasolutions.com
