@@ -99,14 +99,22 @@
         } else {
             var $typing = $('<img>')
                     .attr('src', '//cdn-chat.sstatic.net/chat/img/progress-dots.gif')
+                    .css('marginRight', '4px')
                     .hide();
             $user = $('<span>')
                 .attr('title', "User has read this far")
                 .css({
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '12px',
                     display: 'inline-block',
-                    margin: '4px 8px 4px 0'
+                    margin: '4px 4px 4px 0',
+                    padding: '4px'
                 })
-                .append(CHAT.RoomUsers.createAvatarImage(userId, 16))
+                .append($(CHAT.RoomUsers.createAvatarImage(userId, 16))
+                    .css({
+                        borderRadius: '9px',
+                        padding: '1px'
+                    }))
                 .append(' ')
                 .append($typing)
                 .data('typing', $typing);
@@ -280,7 +288,7 @@
             DEBUG && log("msg: " + e.data);
             var s = JSON.parse(e.data);
             if('last_char_entered' in s.data &&
-                    s.data.last_char_entered > (now() - 4)) {
+                    parseInt(s.data.last_char_entered) > (now() - 4)) {
                 userStartedTyping(s.id);
             }
             if('last_message_read' in s.data) {
