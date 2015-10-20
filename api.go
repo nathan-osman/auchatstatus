@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path"
 	"strconv"
 	"sync"
 )
@@ -40,7 +41,7 @@ func (a *API) connect(w http.ResponseWriter, r *http.Request) {
 // Report the current version of the server.
 func (a *API) version(w http.ResponseWriter, r *http.Request) {
 	if data, err := json.Marshal(map[string]interface{}{
-		"version": "1.1",
+		"version": "1.2",
 	}); err == nil {
 		w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 		w.Header().Set("Content-Type", "application/json")
@@ -78,7 +79,7 @@ func (a *API) removeUser() {
 }
 
 // Create a new instance of the API.
-func NewAPI(addr string) *API {
+func NewAPI(addr, root string) *API {
 	a := &API{
 		server: &http.Server{
 			Addr: addr,
@@ -92,8 +93,12 @@ func NewAPI(addr string) *API {
 		socketError:  make(chan *User),
 	}
 	a.server.Handler = a
+	a.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, path.Join(root, "index.html"))
+	})
 	a.router.HandleFunc("/api/connect", a.connect)
 	a.router.HandleFunc("/api/version", a.version)
+	a.router.PathPrefix("/static/").Handler(http.FileServer(http.Dir(root)))
 	go a.propagateState()
 	go a.removeUser()
 	return a
