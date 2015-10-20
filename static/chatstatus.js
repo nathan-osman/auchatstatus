@@ -73,11 +73,13 @@
             return pendingContainers[msgId];
         }
         var $msg = $('#message-' + msgId),
-            $container = $msg.find('.secs-container');
+            $container = $msg.next('.secs-container');
         if(!$container.length) {
-            $container = $('<div>').addClass('secs-container');
+            $container = $('<div>')
+                .addClass('secs-container')
+                .css('marginLeft', '18px');
             if($msg.length) {
-                $msg.append($container);
+                $container.insertAfter($msg);
             } else {
                 pendingContainers[msgId] = $container;
             }
@@ -232,18 +234,22 @@
      */
     loadScript('jquery.livequery.min.js', function() {
         log("Live Query loaded")
+        var firstLoad = true;
         $('#chat').livequery('.message', function(e) {
-            var msgId = messageId(e),
-                userId = messageUserId(e);
-            if(msgId in pendingContainers) {
-                $(e).append(pendingContainers[msgId]);
-                delete pendingContainers[msgId];
-            }
-            userStoppedTyping(userId);
-            if(windowActive) {
-                broadcastLastMessageRead();
+            if(!firstLoad) {
+                var msgId = messageId(e),
+                    userId = messageUserId(e);
+                if(msgId in pendingContainers) {
+                    $(e).append(pendingContainers[msgId]);
+                    delete pendingContainers[msgId];
+                }
+                userStoppedTyping(userId);
+                if(windowActive) {
+                    broadcastLastMessageRead();
+                }
             }
         });
+        firstLoad = false;
     });
 
     /**
