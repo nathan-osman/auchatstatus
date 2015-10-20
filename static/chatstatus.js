@@ -8,19 +8,47 @@
     // TODO: get rid of this
     if(!location.pathname.startsWith('/rooms/201/')) {
         return;
+
+    /**
+     * Default values for global settings.
+     */
+    var DEFAULTS = {
+        debug: false,
+        self: true,
+        server: 'sechat.quickmediasolutions.com'
+    };
+
+    /**
+     * Store a value in localStorage.
+     * @param key item to set
+     * @param val new value
+     */
+    function set(key, val) {
+        localStorage.setItem(key, JSON.stringify(val));
     }
 
     /**
-     * Global settings.
+     * Retrieve a setting from localStorage.
+     * @param key item to retrieve
+     *
+     * The DEFAULTS variable will be used for setting the default value if the
+     * key is not set.
      */
-    var DEBUG = true,
-        SERVER = 'sechat.quickmediasolutions.com';
+    function get(key) {
+        var val = localStorage.getItem(key);
+        if(val === null) {
+            set(key, DEFAULTS[key]);
+            return DEFAULTS[key];
+        } else {
+            return JSON.parse(val);
+        }
+    }
 
     /**
      * Log the specified message to the console for debug purposes.
      */
     function log(msg) {
-        console.log('[ChatStatus] ' + msg);
+        get('debug') && console.log('[ChatStatus] ' + msg);
     }
 
     /**
@@ -53,7 +81,7 @@
     function loadScript(name, callback) {
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://' + SERVER + '/static/' + name;
+        script.src = 'https://' + get('server') + '/static/' + name;
         script.onload = callback;
         document.body.appendChild(script);
     }
@@ -183,7 +211,7 @@
      */
     function ping() {
         if(isActive()) {
-            DEBUG && log("ping");
+            log("ping");
             socket.send('');
         }
     }
@@ -197,7 +225,7 @@
         if(isActive()) {
             var t = now();
             if(lastTypingMsg < (t - 2)) {
-                DEBUG && log("last_char_entered: " + t);
+                log("last_char_entered: " + t);
                 socket.send(JSON.stringify({
                     id: CHAT.CURRENT_USER_ID,
                     data: {
@@ -217,7 +245,7 @@
             var msgId = messageId($('.message').last());
             if(parseInt(msgId) > parseInt(lastMessageRead)) {
                 lastMessageRead = msgId;
-                DEBUG && log("last_message_read: " + lastMessageRead);
+                log("last_message_read: " + lastMessageRead);
                 socket.send(JSON.stringify({
                     id: CHAT.CURRENT_USER_ID,
                     data: {
@@ -257,11 +285,11 @@
      */
     $(window).on({
         'blur': function() {
-            DEBUG && log("Window has lost focus");
+            log("Window has lost focus");
             windowActive = false;
         },
         'focus': function() {
-            DEBUG && log("Window has gained focus");
+            log("Window has gained focus");
             windowActive = true;
             broadcastLastMessageRead();
         }
@@ -271,7 +299,7 @@
      * Connect to the WebSocket endpoint and set the appropriate callbacks;
      */
     function connect() {
-        socket = new WebSocket('wss://' + SERVER + '/api/connect');
+        socket = new WebSocket('wss://' + get('server') + '/api/connect');
         socket.onopen = onopen;
         socket.onmessage = onmessage;
         socket.onerror = onerror;
@@ -291,7 +319,7 @@
      */
     function onmessage(e) {
         if(e.data.length) {
-            DEBUG && log("msg: " + e.data);
+            log("msg: " + e.data);
             var s = JSON.parse(e.data);
             if('last_char_entered' in s.data &&
                     parseInt(s.data.last_char_entered) > (now() - 4)) {
@@ -319,9 +347,89 @@
         window.setTimeout(connect, 60 * 1000);
     }
 
-    /**
-     * Connect for the first time.
-     */
     connect();
+
+    /**
+     * Update the visibility of the current user.
+     */
+    function updateSelf(val) {
+        getUser(CHAT.CURRENT_USER_ID).toggle(val);
+    }
+    updateSelf();
+
+    /**
+     * Preference dialog
+     */
+    var $prefCover = $('<div>')
+            .css({
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                height: '100%',
+                left: '0',
+                position: 'fixed',
+                top: '0',
+                width: '100%',
+                zIndex: '6'
+            })
+            .hide()
+            .appendTo(document.body),
+        $prefDialog = $('<div>')
+            .css({
+                backgroundColor: '#fff',
+                boxShadow: '0 1px 15px #555555',
+                boxSizing: 'border-box',
+                height: '200px',
+                left: '50%',
+                marginLeft: '-150px',
+                marginTop: '-100px',
+                padding: '8px',
+                position: 'fixed',
+                top: '50%',
+                width: '300px'
+            })
+            .append($('<a>')
+                .attr('href', '#')
+                .css('float', 'right')
+                .html('&times;')
+                .click(function() {
+                    $prefCover.fadeOut();
+                    return false;
+                }))
+            .append($('<h4>').text("Preferences"))
+            .append('<br>')
+            .appendTo($prefCover),
+        $debugOption = $('<div>')
+            .append($('<input>')
+                .attr('type', 'checkbox')
+                .prop('checked', get('debug'))
+                .change(function() {
+                    set('debug', this.checked);
+                }))
+            .append(" debug messages")
+            .appendTo($prefDialog),
+        $selfOption = $('<div>')
+            .append($('<input>')
+                .attr('type', 'checkbox')
+                .prop('checked', get('self'))
+                .change(function() {
+                    set('self', this.checked);
+                    updateSelf(this.checked);
+                }))
+            .append(" show me")
+            .appendTo($prefDialog);
+    $('input[type=checkbox]').css('verticalAlign', 'middle');
+    updateSelf();
+
+    /**
+     * Add a link to the bottom of the page for changing preferences
+     */
+    $('#footer-legal')
+        .prepend(' | ')
+        .prepend($('<a>')
+            .attr('href', '#')
+            .text('prefs')
+            .click(function() {
+                $prefCover.fadeIn();
+                return false;
+            }));
 
 })();
