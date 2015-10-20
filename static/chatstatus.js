@@ -8,6 +8,7 @@
     // TODO: get rid of this
     if(!location.pathname.startsWith('/rooms/201/')) {
         return;
+    }
 
     /**
      * Default values for global settings.
