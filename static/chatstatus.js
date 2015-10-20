@@ -58,8 +58,7 @@
         document.body.appendChild(script);
     }
 
-    var users = {},
-        pendingContainers = {};
+    var pendingContainers = {};
 
     /**
      * Obtain the container for a specific message, creating it if necessary.
@@ -77,14 +76,16 @@
             $container = $msg.find('.secs-container');
         if(!$container.length) {
             $container = $('<div>').addClass('secs-container');
-        }
-        if($msg.length) {
-            $msg.append($container);
-        } else {
-            pendingContainers[msgId] = $container;
+            if($msg.length) {
+                $msg.append($container);
+            } else {
+                pendingContainers[msgId] = $container;
+            }
         }
         return $container;
     }
+
+    var users = {};
 
     /**
      * Obtain the indicator element for a user, creating it if necessary.
@@ -100,6 +101,7 @@
                     .attr('src', '//cdn-chat.sstatic.net/chat/img/progress-dots.gif')
                     .hide();
             $user = $('<span>')
+                .attr('title', "User has read this far")
                 .css({
                     display: 'inline-block',
                     margin: '4px 8px 4px 0'
