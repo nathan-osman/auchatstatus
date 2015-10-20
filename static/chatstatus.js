@@ -108,7 +108,7 @@
                 .addClass('secs-container')
                 .css('marginLeft', '18px');
             if($msg.length) {
-                $container.insertAfter($msg);
+                $msg.after($container);
             } else {
                 pendingContainers[msgId] = $container;
             }
@@ -269,7 +269,7 @@
                 var msgId = messageId(e),
                     userId = messageUserId(e);
                 if(msgId in pendingContainers) {
-                    $(e).append(pendingContainers[msgId]);
+                    $(e).after(pendingContainers[msgId]);
                     delete pendingContainers[msgId];
                 }
                 userStoppedTyping(userId);
