@@ -128,12 +128,13 @@
         if(userId in users) {
             $user = users[userId];
         } else {
+
             var $typing = $('<img>')
                     .attr('src', '//cdn-chat.sstatic.net/chat/img/progress-dots.gif')
                     .css('marginRight', '4px')
                     .hide();
+
             $user = $('<span>')
-                .attr('title', "User has read this far")
                 .css({
                     backgroundColor: 'rgba(0, 0, 0, 0.1)',
                     borderRadius: '12px',
@@ -150,6 +151,14 @@
                 .append($typing)
                 .data('typing', $typing);
             users[userId] = $user;
+
+            var allUsers = CHAT.RoomUsers.allPresent().toArray();
+
+            for (i = 0; i < allUsers.length; i++) {
+                if (allUsers[i].id == userId)
+                    $user.attr('title', allUsers[i].name)
+            }
+
         }
         return $user;
     }
