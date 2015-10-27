@@ -152,11 +152,20 @@
                 .data('typing', $typing);
             users[userId] = $user;
 
+            if (typeof allUsersPrev == 'undefined')
+                var allUsersPrev = [];
+
+            // Create the allUsers variable as an array of all present users
             var allUsers = CHAT.RoomUsers.allPresent().toArray();
 
             for (i = 0; i < allUsers.length; i++) {
-                if (allUsers[i].id == userId)
-                    $user.attr('title', allUsers[i].name)
+                // Iterate through the list of present users and if it's equal
+                // to the user's ID we are updating then ...
+                if (allUsers[i].id == userId) {
+                    // ... set the user's element's title attribute equal to
+                    // the user's username
+                    $user.attr('title', allUsers[i].name);
+                }
             }
 
         }
