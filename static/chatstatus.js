@@ -152,11 +152,17 @@
                 .data('typing', $typing);
             users[userId] = $user;
 
+            // Create the allUsers variable as an array of all present users
             var allUsers = CHAT.RoomUsers.allPresent().toArray();
 
             for (i = 0; i < allUsers.length; i++) {
-                if (allUsers[i].id == userId)
-                    $user.attr('title', allUsers[i].name)
+                // Iterate through the list of present users and if it's equal
+                // to the user's ID we are updating then ...
+                if (allUsers[i].id == userId) {
+                    // ... set the user's element's title attribute equal to
+                    // the user's username
+                    $user.attr('title', allUsers[i].name);
+                }
             }
 
         }
@@ -177,13 +183,14 @@
      * @param userId the ID of the user
      */
     function userStoppedTyping(userId) {
-        var $user = getUser(userId),
-            timeout = $user.data('timeout');
-        if(timeout) {
-            window.clearTimeout(timeout);
-            $user.data('typing').hide();
-            $user.removeData('timeout');
-        }
+    	var $user = getUser(userId),
+    		timeout = $user.data('timeout');
+    	if(timeout) {
+    		window.clearTimeout(timeout);
+    		// Animate the hide
+    		$user.data('typing').animate({width: 'hide'});
+    		$user.removeData('timeout');
+    	}
     }
 
     /**
@@ -194,14 +201,16 @@
      * reset by another call to this function for the same user.
      */
     function userStartedTyping(userId) {
-        var $user = getUser(userId),
-            timeout = $user.data('timeout');
-        if(timeout) {
-            window.clearTimeout(timeout);
-        } else {
-            $user.data('typing').css('display', 'inline');
-        }
-        $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
+    	var $user = getUser(userId),
+    		timeout = $user.data('timeout');
+    	if(timeout) {
+    		window.clearTimeout(timeout);
+    	} else {
+    		// Animate the element as showing
+    		$user.data('typing').animate({width: 'show'});
+    		$user.data('typing').css('display', 'inline');
+    	}
+    	$user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
     }
 
     var socket,
