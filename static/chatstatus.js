@@ -151,14 +151,6 @@
                 .append($typing)
                 .data('typing', $typing);
             users[userId] = $user;
-
-            var allUsers = CHAT.RoomUsers.allPresent().toArray();
-
-            for (i = 0; i < allUsers.length; i++) {
-                if (allUsers[i].id == userId)
-                    $user.attr('title', allUsers[i].name)
-            }
-
         }
         return $user;
     }
@@ -181,7 +173,8 @@
             timeout = $user.data('timeout');
         if(timeout) {
             window.clearTimeout(timeout);
-            $user.data('typing').hide();
+            // Animate the hide
+            $user.data('typing').animate({width: 'hide'});
             $user.removeData('timeout');
         }
     }
@@ -199,6 +192,8 @@
         if(timeout) {
             window.clearTimeout(timeout);
         } else {
+            // Animate the element as showing
+            $user.data('typing').animate({width: 'show'});
             $user.data('typing').css('display', 'inline');
         }
         $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
