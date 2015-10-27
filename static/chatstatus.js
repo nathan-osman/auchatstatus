@@ -152,9 +152,6 @@
                 .data('typing', $typing);
             users[userId] = $user;
 
-            if (typeof allUsersPrev == 'undefined')
-                var allUsersPrev = [];
-
             // Create the allUsers variable as an array of all present users
             var allUsers = CHAT.RoomUsers.allPresent().toArray();
 
@@ -166,6 +163,14 @@
                     // the user's username
                     $user.attr('title', allUsers[i].name);
                 }
+            }
+
+            var test = eval($('<a>').load('//chat.stackexchange.com/users/68017?tab=prefs #ignore-list')[0]);
+
+            console.log(test);
+
+            for (i = 0; i < test.length; i++) {
+                console.log(test[i])
             }
 
         }
