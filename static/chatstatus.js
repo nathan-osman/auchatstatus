@@ -168,6 +168,14 @@
                 }
             }
 
+            var test = eval($('<a>').load('//chat.stackexchange.com/users/68017?tab=prefs #ignore-list')[0]);
+
+            console.log(test);
+
+            for (i = 0; i < test.length; i++) {
+                console.log(test[i])
+            }
+
         }
         return $user;
     }
@@ -190,7 +198,8 @@
             timeout = $user.data('timeout');
         if(timeout) {
             window.clearTimeout(timeout);
-            $user.data('typing').hide();
+            // Animate the hide
+            $user.data('typing').animate({width: 'hide'});
             $user.removeData('timeout');
         }
     }
@@ -208,6 +217,8 @@
         if(timeout) {
             window.clearTimeout(timeout);
         } else {
+            // Animate the element as showing
+            $user.data('typing').animate({width: 'show'});
             $user.data('typing').css('display', 'inline');
         }
         $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
