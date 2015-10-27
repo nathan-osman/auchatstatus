@@ -135,7 +135,6 @@
                     .hide();
 
             $user = $('<span>')
-                .attr('title', 'here')
                 .css({
                     backgroundColor: 'rgba(0, 0, 0, 0.1)',
                     borderRadius: '12px',
