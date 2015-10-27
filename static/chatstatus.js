@@ -155,15 +155,9 @@
 
             var allUsers = CHAT.RoomUsers.allPresent().toArray();
 
-            for (i = 0; i <= allUsers.length; i++) {
-                if (typeof allUsers[i] == 'undefined') {
-                    continue;
-                }
-                currentUser = allUsers[i];
-
-                if (currentUser.id == userId) {
-                    $user.attr('title', currentUser.name)
-                }
+            for (i = 0; i < allUsers.length; i++) {
+                if (allUsers[i].id == userId)
+                    $user.attr('title', allUsers[i].name)
             }
 
         }
