@@ -168,14 +168,6 @@
                 }
             }
 
-            var test = eval($('<a>').load('//chat.stackexchange.com/users/68017?tab=prefs #ignore-list')[0]);
-
-            console.log(test);
-
-            for (i = 0; i < test.length; i++) {
-                console.log(test[i])
-            }
-
         }
         return $user;
     }
