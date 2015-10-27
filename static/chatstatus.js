@@ -164,7 +164,7 @@
                 if (allUsers[i].id == userId) {
                     // ... set the user's element's title attribute equal to
                     // the user's username
-                    $user.attr('title', allUsers[i].name);
+                    $user.attr('title', allUsers[i].name + " has read this far");
                 }
             }
 
