@@ -130,8 +130,10 @@
         } else {
             var $typing = $('<img>')
                     .attr('src', '//cdn-chat.sstatic.net/chat/img/progress-dots.gif')
-                    .css('marginRight', '4px')
-                    .hide();
+                    .css({
+                        display: 'inline-block',
+                        width: 0
+                    });
             $user = $('<span>')
                 .css({
                     backgroundColor: 'rgba(0, 0, 0, 0.1)',
@@ -145,7 +147,6 @@
                         borderRadius: '9px',
                         padding: '1px'
                     }))
-                .append(' ')
                 .append($typing)
                 .data('typing', $typing);
             CHAT.RoomUsers.allPresent().forEach(function(u) {
@@ -176,8 +177,11 @@
             timeout = $user.data('timeout');
         if(timeout) {
             window.clearTimeout(timeout);
-            // Animate the hide
-            $user.data('typing').animate({width: 'hide'});
+            $user.data('typing').animate({
+                marginLeft: 0,
+                marginRight: 0,
+                width: 0
+            });
             $user.removeData('timeout');
         }
     }
@@ -195,9 +199,11 @@
         if(timeout) {
             window.clearTimeout(timeout);
         } else {
-            // Animate the element as showing
-            $user.data('typing').animate({width: 'show'});
-            $user.data('typing').css('display', 'inline');
+            $user.data('typing').animate({
+                marginLeft: '4px',
+                marginRight: '4px',
+                width: '18px'
+            });
         }
         $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
     }
