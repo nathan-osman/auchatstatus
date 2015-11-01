@@ -183,14 +183,14 @@
      * @param userId the ID of the user
      */
     function userStoppedTyping(userId) {
-    	var $user = getUser(userId),
-    		timeout = $user.data('timeout');
-    	if(timeout) {
-    		window.clearTimeout(timeout);
-    		// Animate the hide
-    		$user.data('typing').animate({width: 'hide'});
-    		$user.removeData('timeout');
-    	}
+        var $user = getUser(userId),
+            timeout = $user.data('timeout');
+        if(timeout) {
+            window.clearTimeout(timeout);
+            // Animate the hide
+            $user.data('typing').animate({width: 'hide'});
+            $user.removeData('timeout');
+        }
     }
 
     /**
@@ -201,16 +201,16 @@
      * reset by another call to this function for the same user.
      */
     function userStartedTyping(userId) {
-    	var $user = getUser(userId),
-    		timeout = $user.data('timeout');
-    	if(timeout) {
-    		window.clearTimeout(timeout);
-    	} else {
-    		// Animate the element as showing
-    		$user.data('typing').animate({width: 'show'});
-    		$user.data('typing').css('display', 'inline');
-    	}
-    	$user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
+        var $user = getUser(userId),
+            timeout = $user.data('timeout');
+        if(timeout) {
+            window.clearTimeout(timeout);
+        } else {
+            // Animate the element as showing
+            $user.data('typing').animate({width: 'show'});
+            $user.data('typing').css('display', 'inline');
+        }
+        $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
     }
 
     var socket,
