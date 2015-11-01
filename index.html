@@ -1,175 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Display status of Stack Exchange chat users who opt-in.">
+        <meta name="author" content="Nathan Osman">
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+        <title>Stack Exchange Chat Status</title>
 
-    <title>StackExchange Chat Status</title>
+        <!-- Bootstrap Core CSS -->
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Custom CSS -->
+        <link href="/static/css/landing-page.min.css" rel="stylesheet">
+        <link href="/static/css/particles.min.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link href="static/css/landing-page.css" rel="stylesheet">
+        <!-- Custom Fonts -->
+    	<link href="/static/css/font-awesome.min.css" rel="stylesheet">
+        <link href="http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+	    <div id="particles-js"></div>
 
-    <!-- Custom Fonts -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-    <link href="http://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-	<style>
-		.particles-js-canvas-el {
-			position: fixed;	
-		}
-		
-		.ribbon {
-  			background-color: #0a0;
-  			overflow: hidden;
-  			white-space: nowrap;
-  			/* top left corner */
-  			position: fixed;
-  			left: -50px;
-  			top: 65px;
-  			/* 45 deg ccw rotation */
-  			-webkit-transform: rotate(-45deg);
-     		-moz-transform: rotate(-45deg);
-      		-ms-transform: rotate(-45deg);
-      		-o-transform: rotate(-45deg);
-          	transform: rotate(-45deg);
-  			/* shadow */
-  			-webkit-box-shadow: 0 0 10px #888;
-     		-moz-box-shadow: 0 0 10px #888;
-          	box-shadow: 0 0 10px #888;
-		}
-		.ribbon p {
-  			border: 1px solid #afa;
-  			color: #fff;
-  			display: block;
-  			font: bold 100% "Lato","Helvetica Neue",Helvetica,Arial,sans-serif;
-  			margin: 1px 0;
-  			padding: 10px 50px;
-  			text-align: center;
-  			text-decoration: none;
-  			/* shadow */
-  			text-shadow: 0 0 5px #444;
-		}
-	</style>
-
-</head>
-
-<body>
-	<div id="particles-js"></div>
-    <!-- Navigation -->
-    <nav class="navbar navbar-default navbar-fixed-top topnav" role="navigation">
-        <div class="container topnav" style="z-index: 9999">
-                <a class="navbar-brand topnav" href="https://www.quickmediasolutions.com/">Quick Media Solutions</a>
+        <!-- Header -->
+        <div class="intro-header">
+        	<div class="ribbon" style="z-index:1000">
+            	<p>Now in Beta!</p>
             </div>
-        </div>
-        <!-- /.container -->
-    </nav>
-    <!-- Header -->
-    <div class="intro-header">
-    	<div class="ribbon" style="z-index:1000">
-        	<p>Now Beta!</p>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="intro-message">
-                        <h1>SE Chat Status</h1>
-                        <h3>Chat, How It Was Meant To Be</h3>
-                        <hr class="intro-divider">
-                        <ul class="list-inline intro-social-buttons">
-                            <li>
-                                <a href="https://sechat.quickmediasolutions.com/static/chatstatus.user.js" class="btn btn-success btn-lg"><i class="fa fa-download"></i> <span class="network-name">Install</span></a>
-                            </li>
-                            <li>
-                                <a href="https://github.com/nathan-osman/auchatstatus" class="btn btn-default btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name">Source</span></a>
-                            </li>
-                        </ul>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="intro-message">
+                            <h1>Stack Exchange Chat Status</h1>
+                            <h3>Chat &mdash; the Way It Was Meant to Be</h3>
+                            <hr class="intro-divider">
+                            <ul class="list-inline intro-social-buttons">
+                                <li>
+                                    <a href="/static/js/chatstatus.user.js" class="btn btn-success btn-lg">
+                                        <i class="fa fa-download"></i>
+                                        <span class="network-name">Install</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://github.com/nathan-osman/auchatstatus" class="btn btn-default btn-lg">
+                                        <i class="fa fa-github fa-fw"></i>
+                                        <span class="network-name">Source</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
-        <!-- /.container -->
 
-    </div>
-    <!-- /.intro-header -->
-
-    <!-- Page Content -->
-    <div class="content-section-a" style="z-index: 500; position: relative">
-    	<div class="container">
-            <div class="row">
-                <div class="col-lg-12 col-sm-16">
-                    <hr class="section-heading-spacer">
-                    <div class="clearfix"></div>
-                    <h2 class="section-heading">What is This?</h2>
-                    <p class="lead">Have you ever found the StackExchange Chat platform lacking in critical features like seeing how far other users have read, and a "this user is typing notification?" If so, this userscript is for you!</p>
-                    <p class="lead">It adds these features to the AskUbuntu Chat Room (coming soon to all chat rooms), and completely revitalizes your chat experience!</p>
+        <!-- Page Content -->
+        <div class="content-section-a" style="z-index: 500; position: relative">
+        	<div class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-sm-16">
+                        <div class="clearfix"></div>
+                        <h2 class="section-heading">What Is This?</h2>
+                        <p class="lead">
+                            Have you ever found the Stack Exchange chat platform lacking in critical features like seeing how far other users have read or "this user is typing" notifications? If so, this UserScript is for you!</p>
+                        <p class="lead">
+                            The script adds these features to the Ask Ubuntu Chat Room (coming soon to all chat rooms), and completely revitalizes your chat experience!
+                        </p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-lg-5 col-sm-6">
+                        <div class="clearfix"></div>
+                        <h2 class="section-heading">Requirements</h2>
+                        <p class="lead">
+                            Using this script is easy! All you need is one of the following extensions for your browser:
+                        </p>
+                        <br>
+                        <div class="media">
+                            <div class="media-left">
+                                <i class="fa fa-chrome fa-fw"></i>
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">Google Chrome &amp; Chromium</h4>
+                                <p>
+                                    Both browsers proactively disable unrecognized scripts, so you will need to install the
+                                    <a href="https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en">Tampermonkey extension</a>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="media">
+                            <div class="media-left">
+                                <i class="fa fa-firefox fa-fw"></i>
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">Mozilla Firefox</h4>
+                                <p>
+                                    Please install the
+                                    <a href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/">Greasemonkey add-on</a>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="media">
+                            <div class="media-left">
+                                <i class="fa fa-opera fa-fw"></i>
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">Opera</h4>
+                                <p>
+                                    Opera users can install either the
+                                    <a href="https://addons.opera.com/en/extensions/details/tampermonkey-beta/">Tampermonkey Beta add-on</a>
+                                    or the
+                                    <a href="https://addons.opera.com/en/extensions/details/violent-monkey/">Violent monkey add-on</a>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="media">
+                            <div class="media-left">
+                                <i class="fa fa-safari fa-fw"></i>
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">Safari</h4>
+                                <p>
+                                    Please install the
+                                    <a href="http://tampermonkey.net/?browser=safari">Tampermonkey extension</a>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-lg-offset-2 col-sm-6">
+                        <div class="clearfix"></div>
+                        <h2 class="section-heading">How to Install</h2>
+                        <p class="lead">Installing the actual UserScript is easy as 1-2-3:</p>
+                        <ol class="lead">
+                        	<li>Make sure you have a Userscript manager installed.</li>
+                            <li>Click the Install button above and confirm the installation.</li>
+                            <li>Reload the chat page!</li>
+                        </ol>
+                        <p class="lead">
+                            The script will now automatically load each time you visit the chat page.
+                        </p>
+                    </div>
                 </div>
             </div>
+        </div>
 
-        </div>	
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-5 col-sm-6">
-                    <hr class="section-heading-spacer">
-                    <div class="clearfix"></div>
-                    <h2 class="section-heading">Requirements</h2>
-                    <p class="lead">Using this script is easy! All you need is one of the below extensions, depending on your browser</p>
-                    <ul class="lead">
-                    	<li>Chrome, Opera, Safari: <a href="https://tampermonkey.net/">Tampermonkey</a></li>
-                        <li>Firefox: <a href="https://addons.mozilla.org/en-us/firefox/addon/greasemonkey/">Greasemonkey</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-5 col-lg-offset-2 col-sm-6">
-                    <hr class="section-heading-spacer">
-                    <div class="clearfix"></div>
-                    <h2 class="section-heading">How to Install</h2>
-                    <p class="lead">Installing the actual userscript is easy as 1-2-3:</p>
-                    <ol class="lead">
-                    	<li>Make sure you have a Userscript manager installed.</li>
-                        <li>Click the Install button above.</li>
-                        <li>Click Install again!</li>
-                    </ol>
+        <footer>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p class="copyright text-muted small">
+                            Copyright 2015 <a href="https://quickmediasolutions.com">Nathan Osman</a>
+                            &mdash; Page designed by <a href="https://github.com/KazWolfe">KazWolfe</a>.
+                        </p>
+                    </div>
                 </div>
             </div>
+        </footer>
 
-        </div>
-        <!-- /.container -->
+        <!-- jQuery -->
+        <script src="/static/js/jquery.min.js"></script>
 
-    </div>
-    <!-- /.content-section-a -->
-    <!-- /.content-section-b -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <p class="copyright text-muted small">Copyright &copy; Quick Media Solutions, 2015.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <!-- Bootstrap Core JavaScript -->
+        <script src="/static/js/bootstrap.min.js"></script>
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    
-    <!-- Pretty particles :3 -->
-    <script src="static/js/particles/particles.js"></script>
-    <script src="static/js/particles/app.js"></script>
-</body>
-
+        <!-- Pretty particles :3 -->
+        <script src="/static/js/particles/particles.js"></script>
+        <script src="/static/js/particles/app.js"></script>
+    </body>
 </html>
