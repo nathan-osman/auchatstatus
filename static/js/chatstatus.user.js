@@ -16,6 +16,6 @@
 (function() {
     var code = document.createElement('script');
     code.type = 'text/javascript';
-    code.src = 'https://sechat.stackexchange.com/static/js/chatstatus.js';
+    code.src = 'https://sechat.quickmediasolutions.com/static/js/chatstatus.js';
     document.body.appendChild(code);
 })();
