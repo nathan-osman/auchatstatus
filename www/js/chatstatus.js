@@ -369,7 +369,7 @@
     function updateSelf(val) {
         getUser(CHAT.CURRENT_USER_ID).toggle(val);
     }
-    updateSelf();
+    updateSelf(get('self'));
 
     /**
      * Preference dialog
@@ -431,7 +431,6 @@
             .append(" show me")
             .appendTo($prefDialog);
     $('input[type=checkbox]').css('verticalAlign', 'middle');
-    updateSelf();
 
     /**
      * Add a link to the bottom of the page for changing preferences
