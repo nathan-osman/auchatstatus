@@ -82,7 +82,7 @@
     function loadScript(name, callback) {
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://' + get('server') + '/static/js/' + name;
+        script.src = 'https://' + get('server') + '/js/' + name;
         script.onload = callback;
         document.body.appendChild(script);
     }

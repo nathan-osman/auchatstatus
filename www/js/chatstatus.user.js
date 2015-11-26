@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Stack Exchange Chat Status
 // @author        Nathan Osman
-// @version       1.3
+// @version       1.4
 // @namespace     https://quickmediasolutions.com
 // @description   A UserScript for displaying the status of other users in chat.
 // @include       *://chat.stackexchange.com/rooms/*
@@ -16,6 +16,6 @@
 (function() {
     var code = document.createElement('script');
     code.type = 'text/javascript';
-    code.src = 'https://sechat.quickmediasolutions.com/static/js/chatstatus.js';
+    code.src = 'https://sechat.quickmediasolutions.com/js/chatstatus.js';
     document.body.appendChild(code);
 })();

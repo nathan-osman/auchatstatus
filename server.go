@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"sync"
 )
@@ -26,7 +27,6 @@ type ServerConfig struct {
 // Server providing the script installation page and public API.
 type Server struct {
 	mutex         sync.Mutex
-	router        *mux.Router
 	server        *server.AsyncServer
 	upgrader      *websocket.Upgrader
 	rooms         map[int]UserMap
@@ -131,30 +131,33 @@ func (s *Server) run() {
 
 // Create a new API server with the provided configuration.
 func NewServer(config *ServerConfig) (*Server, error) {
-	s := &Server{
-		router: mux.NewRouter(),
-		server: server.New(config.Addr),
-		upgrader: &websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
+	var (
+		r = mux.NewRouter()
+		s = &Server{
+			server: server.New(config.Addr),
+			upgrader: &websocket.Upgrader{
+				CheckOrigin: func(r *http.Request) bool {
+					return true
+				},
 			},
-		},
-		rooms:         make(map[int]UserMap),
-		clientMessage: make(chan *Message),
-		clientError:   make(chan *User),
-		stop:          make(chan bool),
-	}
-	s.router.HandleFunc("/api/connect/{room:[0-9]+}/{user:[0-9]+}", s.connect)
-	s.router.HandleFunc("/api/ping", s.ping)
-	s.router.PathPrefix("/static/").Handler(http.FileServer(http.Dir(config.Root)))
-	s.server.Handler = s.router
+			rooms:         make(map[int]UserMap),
+			clientMessage: make(chan *Message),
+			clientError:   make(chan *User),
+			stop:          make(chan bool),
+		}
+	)
+	r.HandleFunc("/api/connect/{room:[0-9]+}/{user:[0-9]+}", s.connect)
+	r.HandleFunc("/api/ping", s.ping)
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(filepath.Join(config.Root, "www"))))
+	s.server.Handler = r
 	if config.TLSCert != "" && config.TLSKey != "" {
 		c, err := tls.LoadX509KeyPair(config.TLSCert, config.TLSKey)
 		if err != nil {
 			return nil, err
 		}
-		s.server.TLSConfig.Certificates = make([]tls.Certificate, 1)
-		s.server.TLSConfig.Certificates[0] = c
+		s.server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{c},
+		}
 	}
 	return s, nil
 }
