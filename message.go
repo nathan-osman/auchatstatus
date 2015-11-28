@@ -13,7 +13,7 @@ const (
 // contains a piece of information about the user which needs to be conveyed
 // to the other users.
 type Message struct {
-	RoomId int    `json:"room_id"`
+	RoomId int    `json:"-"`
 	UserId int    `json:"user_id"`
 	Type   string `json:"type"`
 	Value  int    `json:"value"`

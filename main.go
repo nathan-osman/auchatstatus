@@ -21,7 +21,7 @@ func mustGetWorkingDir() string {
 func main() {
 	var (
 		addr    = flag.String("addr", ":8000", "address and port to bind to")
-		root    = flag.String("root", mustGetWorkingDir(), "root directory of source code")
+		root    = flag.String("root", mustGetWorkingDir(), "directory containing 'www/'")
 		tlsCert = flag.String("tls-cert", "", "certificate for TLS")
 		tlsKey  = flag.String("tls-key", "", "private key for TLS")
 	)

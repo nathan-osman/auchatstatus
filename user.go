@@ -33,9 +33,8 @@ func (u *User) run() {
 		if err := json.NewDecoder(r).Decode(&msg); err != nil {
 			continue
 		}
-		if msg.RoomId != u.RoomId || msg.UserId != u.UserId {
-			continue
-		}
+		msg.RoomId = u.RoomId
+		msg.UserId = u.UserId
 		switch msg.Type {
 		case UserActive, UserPosition, UserTyping:
 			u.mutex.Lock()

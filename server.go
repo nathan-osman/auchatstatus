@@ -61,13 +61,13 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newUser := NewUser(conn, roomId, userId, s.clientMessage, s.clientError)
-	room[userId] = newUser
 	for _, user := range room {
 		s := user.State()
 		for _, msg := range s.Messages(user.RoomId, user.UserId) {
 			newUser.Send(msg)
 		}
 	}
+	room[userId] = newUser
 }
 
 // Process a ping from the user.
