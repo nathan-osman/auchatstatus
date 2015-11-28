@@ -389,6 +389,7 @@
             updateUserActive(s.user_id, s.value);
         } else if (s.type == 'position') {
             updateUserMessage(s.user_id, s.value);
+            updateUserActive(s.user_id, s.value);
         } else if (s.type == 'typing' &&
                 s.value > (now() - 4)) {
             userStartedTyping(s.user_id);
