@@ -5,11 +5,6 @@
 
 (function() {
 
-    // TODO: get rid of this
-    if(!location.pathname.startsWith('/rooms/201/')) {
-        return;
-    }
-
     /**
      * Default values for global settings.
      */
@@ -37,7 +32,7 @@
      */
     function get(key) {
         var val = localStorage.getItem(key);
-        if(val === null) {
+        if (val === null) {
             set(key, DEFAULTS[key]);
             return DEFAULTS[key];
         } else {
@@ -53,7 +48,7 @@
     }
 
     /**
-     * Return the current time as a unix timestamp.
+     * Return the current time as a unix timestamp (integer).
      */
     function now() {
         return parseInt(new Date().getTime() / 1000);
@@ -61,17 +56,28 @@
 
     /**
      * Given a message, obtain its ID.
+     * @param elem HTML element or jQuery object
      */
-    function messageId(e) {
-        return $(e).attr('id').match(/message-(\d+)/)[1];
+    function messageId(elem) {
+        if ($(elem).attr('id'))
+        return $(elem).attr('id').match(/message-(\d+)/)[1];
     }
 
     /**
      * Given a message, obtain the user's ID. This is made simpler by the fact
      * that SE stores the ID directly in one of the parent elements.
+     * @param elem HTML element or jQuery object
      */
-    function messageUserId(e) {
-        return $(e).closest('.user-container').data('user');
+    function messageUserId(elem) {
+        return $(elem).closest('.user-container').data('user');
+    }
+
+    /**
+     * Display a notification at the top of the page.
+     * @param msg HTML message to display
+     */
+    function notify(msg) {
+        window.Notifier().notify(msg);
     }
 
     /**
@@ -84,30 +90,38 @@
         script.type = 'text/javascript';
         script.src = 'https://' + get('server') + '/js/' + name;
         script.onload = callback;
+        script.onerror = function() {
+            notify(
+                "Unable to load <strong>" + name +
+                "</strong> from <strong>" + get('server') + "</strong>."
+            );
+        };
         document.body.appendChild(script);
     }
 
+    /**
+     * Consider the following scenario - notification that a message was read
+     * arrives before the message - therefore we need to store the message in a
+     * "pending" container until it arrives.
+     */
     var pendingContainers = {};
 
     /**
      * Obtain the container for a specific message, creating it if necessary.
      * @param msgId the ID of the message
      * @return the container for indicators
-     *
-     * If the message does not exist, the container will be added to a list of
-     * "pending" containers to be created when the message does exist.
      */
     function getContainer(msgId) {
-        if(msgId in pendingContainers) {
+        if (msgId in pendingContainers) {
             return pendingContainers[msgId];
         }
         var $msg = $('#message-' + msgId),
             $container = $msg.next('.secs-container');
-        if(!$container.length) {
+        if (!$container.length) {
             $container = $('<div>')
                 .addClass('secs-container')
                 .css('marginLeft', '18px');
-            if($msg.length) {
+            if ($msg.length) {
                 $msg.after($container);
             } else {
                 pendingContainers[msgId] = $container;
@@ -116,6 +130,9 @@
         return $container;
     }
 
+    /**
+     * Maintain a map of user IDs to their container.
+     */
     var users = {};
 
     /**
@@ -125,7 +142,7 @@
      */
     function getUser(userId) {
         var $user;
-        if(userId in users) {
+        if (userId in users) {
             $user = users[userId];
         } else {
             var $typing = $('<img>')
@@ -150,13 +167,22 @@
                 .append($typing)
                 .data('typing', $typing);
             CHAT.RoomUsers.allPresent().forEach(function(u) {
-                if(u.id == userId) {
+                if (u.id == userId) {
                     $user.attr('title', u.name + " has read this far");
                 }
             });
             users[userId] = $user;
         }
         return $user;
+    }
+
+    /**
+     * Update whether the current user is active or not.
+     * @param userId the ID of the user to update
+     * @param active whether the user is active or not
+     */
+    function updateUserActive(userId, active) {
+        getUser(userId).css('opacity', active ? '1' : '0.5');
     }
 
     /**
@@ -175,7 +201,7 @@
     function userStoppedTyping(userId) {
         var $user = getUser(userId),
             timeout = $user.data('timeout');
-        if(timeout) {
+        if (timeout) {
             window.clearTimeout(timeout);
             $user.data('typing').animate({
                 marginLeft: 0,
@@ -196,7 +222,7 @@
     function userStartedTyping(userId) {
         var $user = getUser(userId),
             timeout = $user.data('timeout');
-        if(timeout) {
+        if (timeout) {
             window.clearTimeout(timeout);
         } else {
             $user.data('typing').animate({
@@ -206,6 +232,16 @@
             });
         }
         $user.data('timeout', window.setTimeout(userStoppedTyping, 4000, userId));
+    }
+
+    /**
+     * Indicate that a user has quit.
+     */
+    function userQuit(userId) {
+        getUser(userId).fadeOut(function() {
+            $(this).remove();
+            delete users[userId];
+        });
     }
 
     var socket,
@@ -224,9 +260,11 @@
      * Send a ping every 30 seconds to avoid having the socket timeout.
      */
     function ping() {
-        if(isActive()) {
+        if (isActive()) {
             log("ping");
-            socket.send('');
+            socket.send(JSON.stringify({
+                type: 'ping'
+            }));
         }
     }
     window.setInterval(ping, 30000);
@@ -236,15 +274,13 @@
      * the messages once per two seconds to avoid excessive bandwidth.
      */
     $('#input').on('keypress', function() {
-        if(isActive()) {
+        if (isActive()) {
             var t = now();
-            if(lastTypingMsg < (t - 2)) {
+            if (lastTypingMsg < (t - 2)) {
                 log("last_char_entered: " + t);
                 socket.send(JSON.stringify({
-                    id: CHAT.CURRENT_USER_ID,
-                    data: {
-                        last_char_entered: t.toString()
-                    }
+                    type: 'typing',
+                    value: t
                 }));
                 lastTypingMsg = t;
             }
@@ -252,20 +288,31 @@
     });
 
     /**
+     * Broadcast the fact that the input box has gained or lost focus.
+     * @param active whether the input box is active or not
+     */
+    function broadcastActive(active) {
+        socket.send(JSON.stringify({
+            type: 'active',
+            value: active ? 1 : 0
+        }));
+    }
+
+    /**
      * Broadcast the last message read to the other users.
      */
     function broadcastLastMessageRead() {
-        if(isActive()) {
+        if (isActive()) {
             var msgId = messageId($('.message').last());
-            if(parseInt(msgId) > parseInt(lastMessageRead)) {
-                lastMessageRead = msgId;
+            if (parseInt(msgId) > parseInt(lastMessageRead)) {
+                lastMessageRead = parseInt(msgId);
                 log("last_message_read: " + lastMessageRead);
                 socket.send(JSON.stringify({
-                    id: CHAT.CURRENT_USER_ID,
-                    data: {
-                        last_message_read: lastMessageRead
-                    }
+                    type: 'position',
+                    value: lastMessageRead
                 }));
+            } else {
+                broadcastActive(true);
             }
         }
     }
@@ -278,15 +325,15 @@
         log("Live Query loaded")
         var firstLoad = true;
         $('#chat').livequery('.message', function(e) {
-            if(!firstLoad) {
+            if (!firstLoad) {
                 var msgId = messageId(e),
                     userId = messageUserId(e);
-                if(msgId in pendingContainers) {
+                if (msgId in pendingContainers) {
                     $(e).after(pendingContainers[msgId]);
                     delete pendingContainers[msgId];
                 }
                 userStoppedTyping(userId);
-                if(windowActive) {
+                if (windowActive) {
                     broadcastLastMessageRead();
                 }
             }
@@ -301,6 +348,7 @@
         'blur': function() {
             log("Window has lost focus");
             windowActive = false;
+            broadcastActive(false);
         },
         'focus': function() {
             log("Window has gained focus");
@@ -313,7 +361,10 @@
      * Connect to the WebSocket endpoint and set the appropriate callbacks;
      */
     function connect() {
-        socket = new WebSocket('wss://' + get('server') + '/api/connect');
+        socket = new WebSocket(
+            'wss://' + get('server') + '/api/connect/' +
+            CHAT.CURRENT_ROOM_ID + '/' + CHAT.CURRENT_USER_ID
+        );
         socket.onopen = onopen;
         socket.onmessage = onmessage;
         socket.onerror = onerror;
@@ -332,16 +383,17 @@
      * Process a message received from another user.
      */
     function onmessage(e) {
-        if(e.data.length) {
-            log("msg: " + e.data);
-            var s = JSON.parse(e.data);
-            if('last_char_entered' in s.data &&
-                    parseInt(s.data.last_char_entered) > (now() - 4)) {
-                userStartedTyping(s.id);
-            }
-            if('last_message_read' in s.data) {
-                updateUserMessage(s.id, s.data.last_message_read);
-            }
+        log("msg: " + e.data);
+        var s = JSON.parse(e.data);
+        if (s.type == 'active') {
+            updateUserActive(s.user_id, s.value);
+        } else if (s.type == 'position') {
+            updateUserMessage(s.user_id, s.value);
+        } else if (s.type == 'typing' &&
+                s.value > (now() - 4)) {
+            userStartedTyping(s.user_id);
+        } else if (s.type == 'quit') {
+            userQuit(s.user_id);
         }
     }
 
