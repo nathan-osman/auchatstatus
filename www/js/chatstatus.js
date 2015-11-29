@@ -402,7 +402,7 @@
      * Log an error that occurs.
      */
     function onerror(e) {
-        log("socket error: " + e);
+        log("socket error: " + e.message);
     }
 
     /**
@@ -482,6 +482,15 @@
                     updateSelf(this.checked);
                 }))
             .append(" show me")
+            .appendTo($prefDialog),
+        $serverOption = $('<div>')
+            .append("server: ")
+            .append($('<input>')
+                .attr('type', 'text')
+                .val(get('server'))
+                .change(function() {
+                    set('server', $(this).val());
+                }))
             .appendTo($prefDialog);
     $('input[type=checkbox]').css('verticalAlign', 'middle');
 
