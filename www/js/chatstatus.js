@@ -480,7 +480,7 @@
                     }))
                 .append(" debug messages")
                 .appendTo($prefDialog),
-            $showMe = $('<div>')
+            $showMeOption = $('<div>')
                 .append($('<input>')
                     .attr('type', 'checkbox')
                     .prop('checked', preferences.get('showMe'))
@@ -488,6 +488,24 @@
                         preferences.set('showMe', this.checked);
                     }))
                 .append(" show me")
+                .appendTo($prefDialog),
+            $showActive = $('<div>')
+                .append($('<input>')
+                    .attr('type', 'checkbox')
+                    .prop('checked', preferences.get('showActive'))
+                    .change(function() {
+                        preferences.set('showActive', this.checked);
+                    }))
+                .append(" others see if I'm active")
+                .appendTo($prefDialog),
+            $showTypingOption = $('<div>')
+                .append($('<input>')
+                    .attr('type', 'checkbox')
+                    .prop('checked', preferences.get('showTyping'))
+                    .change(function() {
+                        preferences.set('showTyping', this.checked);
+                    }))
+                .append(" others see me typing")
                 .appendTo($prefDialog),
             $serverOption = $('<div>')
                 .append("server: ")
@@ -572,7 +590,9 @@
      * message read or indicate that focus was gained.
      */
     ui.onactivechange = function(active) {
-        socket.send('active', windowActive = (active ? 1 : 0));
+        if (showActive) {
+            socket.send('active', windowActive = (active ? 1 : 0));
+        }
         if (windowActive && lastMessageReadId != lastMessageId) {
             socket.send('position', lastMessageReadId = lastMessageId);
         }
@@ -598,7 +618,9 @@
      * avoid overwhelming the API (once every 2 seconds).
      */
     ui.ontyping = throttle(function() {
-        socket.send('typing', now());
+        if (showTyping) {
+            socket.send('typing', now());
+        }
     }, 2);
 
 })();
