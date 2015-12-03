@@ -2,7 +2,7 @@ package main
 
 // Current state of an individual user in a room.
 type State struct {
-	Active          bool
+	Active          int
 	LastMessageRead int
 	LastCharEntered int
 }
@@ -11,18 +11,24 @@ type State struct {
 func (s *State) Update(msg *Message) {
 	switch msg.Type {
 	case UserActive:
-		s.Active = msg.Value != 0
+		s.Active = msg.Value
 	case UserPosition:
-		s.Active = true
 		s.LastMessageRead = msg.Value
 	case UserTyping:
 		s.LastCharEntered = msg.Value
 	}
 }
 
-// Create a slice of messages representing the current state.
+// Create a slice of messages representing the current state. Note that because
+//
 func (s *State) Messages(roomId, userId int) []*Message {
-	messages := []*Message{
+	return []*Message{
+		&Message{
+			RoomId: roomId,
+			UserId: userId,
+			Type:   UserActive,
+			Value:  s.Active,
+		},
 		&Message{
 			RoomId: roomId,
 			UserId: userId,
@@ -36,13 +42,4 @@ func (s *State) Messages(roomId, userId int) []*Message {
 			Value:  s.LastCharEntered,
 		},
 	}
-	if !s.Active {
-		messages = append(messages, &Message{
-			RoomId: roomId,
-			UserId: userId,
-			Type:   UserActive,
-			Value:  0,
-		})
-	}
-	return messages
 }
