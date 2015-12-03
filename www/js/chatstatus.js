@@ -584,10 +584,12 @@
     ui.onnewmessage = function(messageId, userId) {
         userManager.attachPendingContainer(messageId);
         userManager.get(userId).setTyping(false);
-        lastMessageId = messageId;
-        if (windowActive) {
-            lastMessageReadId = lastMessageId;
-            socket.send('position', lastMessageReadId);
+        if (messageId > lastMessageId) {
+            lastMessageId = messageId;
+            if (windowActive) {
+                lastMessageReadId = lastMessageId;
+                socket.send('position', lastMessageReadId);
+            }
         }
     };
 
