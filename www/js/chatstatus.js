@@ -178,6 +178,25 @@
         };
 
         /**
+         * jQuery.prev() and jQuery.next() also need to be hooked so that using
+         * the arrow keys to navigate works properly. If the next or previous
+         * message is being sought, "skip" over any containers in the way.
+         */
+        $.each(['prev', 'next'], function(i, name) {
+            var fn = $.fn[name];
+            $.fn[name] = function(s) {
+                var elem = this;
+                if (s == '.message') {
+                    var $container = fn.apply(this, ['.secs-container']);
+                    if ($container.length) {
+                        elem = $container;
+                    }
+                }
+                return fn.apply(elem, arguments);
+            };
+        });
+
+        /**
          * Attach a pending container if one exists for the message.
          */
         this.attachPendingContainer = function(messageId) {
@@ -489,7 +508,10 @@
                     .append($('<div>').text(label + ":"))
                     .append($('<input>')
                         .attr('type', 'text')
-                        .css('width', '100%')
+                        .css({
+                            fontSize: '8pt',
+                            width: '100%'
+                        })
                         .val(preferences.get(key))
                         .change(function() {
                             preferences.set(key, $(this).val());
@@ -499,7 +521,10 @@
                     .append($('<span>').text(label + ": "))
                     .append($('<input>')
                         .attr('type', 'number')
-                        .css('width', '50px')
+                        .css({
+                            fontSize: '8pt',
+                            width: '50px'
+                        })
                         .val(preferences.get(key))
                         .change(function() {
                             preferences.set(key, $(this).val());
