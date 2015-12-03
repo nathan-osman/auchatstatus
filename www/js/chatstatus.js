@@ -57,14 +57,14 @@
          * Default values for all settings.
          */
         var defaultValues = {
-            // Show debug messages in the console
-            debugMessages: false,
             // Show the user with everyone else
             showMe: true,
             // Show the user's active status
-            showActive: true,
+            othersSeeMeActive: true,
             // Show the user's typing status
-            showTyping: true,
+            othersSeeMeTyping: true,
+            // Show debug messages in the console
+            debugMessages: false,
             // URI chat server to connect to
             server: 'sechat.quickmediasolutions.com',
             // Ping interval (in seconds)
@@ -91,6 +91,13 @@
          */
         this.set = function(key, val) {
             localStorage.setItem(key, JSON.stringify(val));
+        };
+
+        /**
+         * Enumerate each of the settings.
+         */
+        this.each = function(callback) {
+            $.each(defaultValues, callback);
         };
     }
 
@@ -428,9 +435,7 @@
      */
     function PreferenceDialog(preferences) {
 
-        /**
-         * Create each of the elements.
-         */
+        // Create the background cover and dialog elements.
         var $prefCover = $('<div>')
                 .css({
                     backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -448,10 +453,10 @@
                     backgroundColor: '#fff',
                     boxShadow: '0 1px 15px #555555',
                     boxSizing: 'border-box',
-                    height: '200px',
+                    height: '250px',
                     left: '50%',
                     marginLeft: '-150px',
-                    marginTop: '-100px',
+                    marginTop: '-125px',
                     padding: '8px',
                     position: 'fixed',
                     top: '50%',
@@ -470,57 +475,52 @@
                     .css('fontSize', '8pt')
                     .text("Reload the page to apply changes."))
                 .append('<br>')
-                .appendTo($prefCover),
-            $debugOption = $('<div>')
-                .append($('<input>')
-                    .attr('type', 'checkbox')
-                    .prop('checked', preferences.get('debugMessages'))
-                    .change(function() {
-                        preferences.set('debugMessages', this.checked);
-                    }))
-                .append(" debug messages")
-                .appendTo($prefDialog),
-            $showMeOption = $('<div>')
-                .append($('<input>')
-                    .attr('type', 'checkbox')
-                    .prop('checked', preferences.get('showMe'))
-                    .change(function() {
-                        preferences.set('showMe', this.checked);
-                    }))
-                .append(" show me")
-                .appendTo($prefDialog),
-            $showActive = $('<div>')
-                .append($('<input>')
-                    .attr('type', 'checkbox')
-                    .prop('checked', preferences.get('showActive'))
-                    .change(function() {
-                        preferences.set('showActive', this.checked);
-                    }))
-                .append(" others see if I'm active")
-                .appendTo($prefDialog),
-            $showTypingOption = $('<div>')
-                .append($('<input>')
-                    .attr('type', 'checkbox')
-                    .prop('checked', preferences.get('showTyping'))
-                    .change(function() {
-                        preferences.set('showTyping', this.checked);
-                    }))
-                .append(" others see me typing")
-                .appendTo($prefDialog),
-            $serverOption = $('<div>')
-                .append("server: ")
-                .append($('<input>')
-                    .attr('type', 'text')
-                    .val(preferences.get('server'))
-                    .change(function() {
-                        preferences.set('server', $(this).val());
-                    }))
-                .appendTo($prefDialog);
+                .appendTo($prefCover);
+
+        // For each of the settings, create an appropriate control.
+        preferences.each(function(key, defaultValue) {
+            var type = typeof defaultValue,
+                label = key.replace(/[A-Z]/g, ' $&').toLowerCase()
+                    .replace(/^./, function(c) { return c.toUpperCase(); }),
+                $option;
+            if (type == 'string') {
+                $option = $('<div>')
+                    .css('margin', '10px 0')
+                    .append($('<div>').text(label + ":"))
+                    .append($('<input>')
+                        .attr('type', 'text')
+                        .css('width', '100%')
+                        .val(preferences.get(key))
+                        .change(function() {
+                            preferences.set(key, $(this).val());
+                        }));
+            } else if (type == 'number') {
+                $option = $('<div>')
+                    .append($('<span>').text(label + ": "))
+                    .append($('<input>')
+                        .attr('type', 'number')
+                        .css('width', '50px')
+                        .val(preferences.get(key))
+                        .change(function() {
+                            preferences.set(key, $(this).val());
+                        }));
+            } else if (type == 'boolean') {
+                $option = $('<div>')
+                    .append($('<input>')
+                        .attr('type', 'checkbox')
+                        .prop('checked', preferences.get(key))
+                        .change(function() {
+                            preferences.set(key, this.checked);
+                        }))
+                    .append(label);
+            }
+            $option.appendTo($prefDialog);
+        });
+
+        // Fix checkbox alignment
         $('input[type=checkbox]').css('verticalAlign', 'middle');
 
-        /**
-         * Add a link to the footer.
-         */
+        // Add a link to the footer
         $('#footer-legal')
             .prepend(' | ')
             .prepend($('<a>')
@@ -540,8 +540,8 @@
         preferenceDialog = new PreferenceDialog(preferences);
 
     var showMe = preferences.get('showMe'),
-        showActive = preferences.get('showActive'),
-        showTyping = preferences.get('showTyping');
+        othersSeeMeActive = preferences.get('othersSeeMeActive'),
+        othersSeeMeTyping = preferences.get('othersSeeMeTyping');
 
     var windowActive = 1,
         lastMessageId = 0,
@@ -590,7 +590,7 @@
      * message read or indicate that focus was gained.
      */
     ui.onactivechange = function(active) {
-        if (showActive) {
+        if (othersSeeMeActive) {
             socket.send('active', windowActive = (active ? 1 : 0));
         }
         if (windowActive && lastMessageReadId != lastMessageId) {
@@ -618,7 +618,7 @@
      * avoid overwhelming the API (once every 2 seconds).
      */
     ui.ontyping = throttle(function() {
-        if (showTyping) {
+        if (othersSeeMeTyping) {
             socket.send('typing', now());
         }
     }, 2);
