@@ -480,6 +480,15 @@
                     }))
                 .append(" debug messages")
                 .appendTo($prefDialog),
+            $showMe = $('<div>')
+                .append($('<input>')
+                    .attr('type', 'checkbox')
+                    .prop('checked', preferences.get('showMe'))
+                    .change(function() {
+                        preferences.set('showMe', this.checked);
+                    }))
+                .append(" show me")
+                .appendTo($prefDialog),
             $serverOption = $('<div>')
                 .append("server: ")
                 .append($('<input>')
@@ -512,6 +521,10 @@
         ui = new UI(preferences, logFactory),
         preferenceDialog = new PreferenceDialog(preferences);
 
+    var showMe = preferences.get('showMe'),
+        showActive = preferences.get('showActive'),
+        showTyping = preferences.get('showTyping');
+
     var windowActive = 1,
         lastMessageId = 0,
         lastMessageReadId = 0;
@@ -542,12 +555,14 @@
         } else {
             var user = userManager.get(json.user_id),
                 value = json.value;
-            if (type == 'active') {
-                user.setActive(value);
-            } else if (type == 'position') {
-                user.moveTo(value);
-            } else if (type == 'typing') {
-                user.setTyping(value > (now() - 4));
+            if (userId != CHAT.CURRENT_USER_ID || showMe) {
+                if (type == 'active') {
+                    user.setActive(value);
+                } else if (type == 'position') {
+                    user.moveTo(value);
+                } else if (type == 'typing') {
+                    user.setTyping(value > (now() - 4));
+                }
             }
         }
     };
