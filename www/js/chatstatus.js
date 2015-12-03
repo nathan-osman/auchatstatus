@@ -476,7 +476,7 @@
                     .attr('type', 'checkbox')
                     .prop('checked', preferences.get('debugMessages'))
                     .change(function() {
-                        set('debug', this.checked);
+                        preferences.set('debugMessages', this.checked);
                     }))
                 .append(" debug messages")
                 .appendTo($prefDialog),
@@ -486,7 +486,7 @@
                     .attr('type', 'text')
                     .val(preferences.get('server'))
                     .change(function() {
-                        set('server', $(this).val());
+                        preferences.set('server', $(this).val());
                     }))
                 .appendTo($prefDialog);
         $('input[type=checkbox]').css('verticalAlign', 'middle');
