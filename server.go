@@ -35,6 +35,19 @@ type Server struct {
 	stop          chan bool
 }
 
+// Write a JSON response.
+func (s *Server) writeJSON(w http.ResponseWriter, i interface{}) {
+	b, err := json.Marshal(i)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Length", strconv.Itoa(len(b)))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
+}
+
 // Upgrade the connection to websocket. Note that a client may only have a
 // single connection for each room they are in.
 func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
@@ -72,15 +85,25 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 
 // Process a ping from the user.
 func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
-	b, err := json.Marshal(struct{}{})
-	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+	s.writeJSON(w, struct{}{})
+}
+
+// Retrieve statistics about current users.
+func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
+	var (
+		numRooms = 0
+		numUsers = 0
+	)
+	s.mutex.Lock()
+	numRooms = len(s.rooms)
+	for _, room := range s.rooms {
+		numUsers += len(room)
 	}
-	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(b)
+	s.mutex.Unlock()
+	s.writeJSON(w, map[string]int{
+		"num_rooms": numRooms,
+		"num_users": numUsers,
+	})
 }
 
 // Propagate the specified message to a room.
@@ -148,6 +171,7 @@ func NewServer(config *ServerConfig) (*Server, error) {
 	)
 	r.HandleFunc("/api/connect/{room:[0-9]+}/{user:[0-9]+}", s.connect)
 	r.HandleFunc("/api/ping", s.ping)
+	r.HandleFunc("/api/stats", s.stats)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(filepath.Join(config.Root, "www"))))
 	s.server.Handler = r
 	if config.TLSCert != "" && config.TLSKey != "" {
