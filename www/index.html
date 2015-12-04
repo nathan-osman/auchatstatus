@@ -33,7 +33,7 @@
                     <div class="col-lg-12">
                         <div class="intro-message">
                             <h1>Stack Exchange Chat Status</h1>
-                            <h3>Chat &mdash; the Way It Was Meant to Be</h3>
+                            <h3 id="ticker">Chat &mdash; the Way It Was Meant to Be</h3>
                             <hr class="intro-divider">
                             <ul class="list-inline intro-social-buttons">
                                 <li>
@@ -182,5 +182,28 @@
         <!-- Pretty particles :3 -->
         <script src="/js/particles/particles.js"></script>
         <script src="/js/particles/app.js"></script>
+
+        <!-- Display current users. -->
+        <script>
+            $(function() {
+                function refresh() {
+                    function pl(i, s, p) {
+                        return i.length == 1 ? s : p;
+                    }
+                    function schedule() {
+                        window.setTimeout(refresh, 30000);
+                    }
+                    $.get('/api/stats').then(function(d) {
+                        $('#ticker').text(
+                            "There " + pl(d.num_users, "is", "are") + " currently " +
+                            d.num_users + " user" + pl(d.num_users, "", "s") + " chatting in " +
+                            d.num_rooms + " room" + pl(d.num_rooms, "", "s") + "."
+                        );
+                        schedule();
+                    }, schedule);
+                }
+                refresh();
+            });
+        </script>
     </body>
 </html>
