@@ -166,7 +166,10 @@
                 <div class="row">
                     <div class="col-lg-6">
                         <br><br>
-                        <div id="gears"></div>
+                        <video width="400" height="240" autoplay="true" loop="true">
+                            <source src="/videos/gears.mp4" type="video/mp4">
+                            <source src="/videos/gears.webm" type="video/webm">
+                        </video>
                     </div>
                     <div class="col-lg-6">
                         <h2 class="section-heading">How It Works</h2>
@@ -231,24 +234,6 @@
                     }, schedule);
                 }
                 refresh();
-
-                /**
-                 * Animate the gear image.
-                 */
-                var $img = $('<img>').attr('src', '/img/gears-animation.jpg'),
-                    curFrame = 0;
-                function nextFrame() {
-                    $img.css('backgroundPosition', '0 ' + (curFrame * -240) + 'px');
-                    curFrame++;
-                    if (curFrame == 64) {
-                        curFrame = 0;
-                    }
-                    window.setTimeout(nextFrame, 50);
-                }
-                $img.load(function() {
-                    $img = $('#gears').css('backgroundImage', 'url(' + $img.attr('src') + ')');
-                    nextFrame();
-                });
 
             });
         </script>
