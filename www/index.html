@@ -75,8 +75,23 @@
                         <div class="clearfix"></div>
                         <h2 class="section-heading">Requirements</h2>
                         <p class="lead">
-                            Using this script is easy! All you need is one of the following extensions for your browser:
+                            Using this script is easy! All you need to do is follow the instructions for your browser below:
                         </p>
+                        <div class="media">
+                            <div class="media-left">
+                                <i class="fa fa-internet-explorer fa-fw"></i>
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">Internet Explorer &amp; Edge</h4>
+                                <p>
+                                    IE and Edge users need
+                                    <a href="javascript:var e=document.createElement('script');e.type='text/javascript';e.src='https://sechat.quickmediasolutions.com/js/chatstatus.js';document.body.appendChild(e)">this bookmarklet</a>.
+                                    Edge users need to follow the steps in
+                                    <a href="http://www.howtogeek.com/231775/how-to-install-and-use-bookmarklets-in-microsoft-edge/">this</a>
+                                    article.
+                                </p>
+                            </div>
+                        </div>
                         <div class="media">
                             <div class="media-left">
                                 <i class="fa fa-chrome fa-fw"></i>
@@ -127,33 +142,41 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="media">
-                            <div class="media-left">
-                                <i class="fa fa-internet-explorer fa-fw"></i>
-                            </div>
-                            <div class="media-body">
-                                <h4 class="media-heading">Internet Explorer</h4>
-                                <p>
-                                    IE and Edge users need
-                                    <a href="javascript:var c=document.createElement('script');c.type='text/javascript';c.src='https://sechat.quickmediasolutions.com/js/chatstatus.js';document.body.appendChild(c)">this bookmarklet</a>.
-                                    Edge users need to follow the steps in
-                                    <a href="http://www.howtogeek.com/231775/how-to-install-and-use-bookmarklets-in-microsoft-edge/">this</a>
-                                    article.
-                                </p>
-                            </div>
-                        </div>
                     </div>
                     <div class="col-lg-5 col-lg-offset-2 col-sm-6">
                         <div class="clearfix"></div>
-                        <h2 class="section-heading">How to Install</h2>
-                        <p class="lead">Installing the actual UserScript is easy as 1-2-3:</p>
-                        <ol class="lead">
-                        	<li>Make sure you have a Userscript manager installed.</li>
+                        <h2 class="section-heading">Using the Script</h2>
+                        <p class="lead">Installing and using the UserScript is very easy.</p>
+                        <h3>Internet Explorer &amp; Edge</h3>
+                        <p>
+                            Simply open a chat page and click the bookmarklet.
+                        </p>
+                        <h3>Other Browsers</h3>
+                        <ol>
+                            <li>Make sure you have a supported Userscript manager installed.</li>
                             <li>Click the Install button above and confirm the installation.</li>
-                            <li>Reload the chat page!</li>
+                            <li>Reload any chat pages you have open.</li>
                         </ol>
+                        <p>
+                            The script will now automatically load each time you visit a chat page.
+                        </p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <br><br>
+                        <div id="gears"></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <h2 class="section-heading">How It Works</h2>
                         <p class="lead">
-                            The script will now automatically load each time you visit the chat page.
+                            Whenever a chat page is opened, the script connects to the central server using a
+                            <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API">WebSocket</a>.
+                        </p>
+                        <p class="lead">
+                            Whenever a new message is read or you start typing, the script sends a small packet of information to the central server.
+                            This information is then sent to everyone else in the room who has installed the script.
                         </p>
                     </div>
                 </div>
@@ -186,6 +209,11 @@
         <!-- Display current users. -->
         <script>
             $(function() {
+
+                /**
+                 * Update the ticker along the top of the page with the number
+                 * of users currently using the script.
+                 */
                 function refresh() {
                     function pl(i, s, p) {
                         return i.length == 1 ? s : p;
@@ -203,6 +231,25 @@
                     }, schedule);
                 }
                 refresh();
+
+                /**
+                 * Animate the gear image.
+                 */
+                var $img = $('<img>').attr('src', '/img/gears-animation.jpg'),
+                    curFrame = 0;
+                function nextFrame() {
+                    $img.css('backgroundPosition', '0 ' + (curFrame * -240) + 'px');
+                    curFrame++;
+                    if (curFrame == 64) {
+                        curFrame = 0;
+                    }
+                    window.setTimeout(nextFrame, 50);
+                }
+                $img.load(function() {
+                    $img = $('#gears').css('backgroundImage', 'url(' + $img.attr('src') + ')');
+                    nextFrame();
+                });
+
             });
         </script>
     </body>
