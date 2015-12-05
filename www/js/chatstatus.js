@@ -442,10 +442,16 @@
         document.body.appendChild(script);
 
         /**
-         * Invoke the typing callback when the user types.
+         * Invoke the typing callback when the input box content changes.
          */
-        $('#input').on('keypress', function() {
-            self.ontyping && self.ontyping();
+        var $input = $('#input'),
+            oldVal = $input.val();
+        $input.on('keyup', function(e) {
+            var newVal = $input.val();
+            if (newVal != oldVal) {
+                self.ontyping && self.ontyping();
+                oldVal = newVal;
+            }
         });
     }
 
