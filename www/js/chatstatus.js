@@ -235,6 +235,8 @@
                     .attr('src', '//cdn-chat.sstatic.net/chat/img/progress-dots.gif')
                     .css({
                         display: 'inline-block',
+                        margin: '0 2px',
+                        verticalAlign: 'middle',
                         width: 0
                     })
                     .appendTo($indicator),
