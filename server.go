@@ -62,16 +62,16 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	_, ok := s.rooms[roomId]
-	if !ok {
-		s.rooms[roomId] = make(UserMap)
-	}
-	room := s.rooms[roomId]
-	_, ok = room[userId]
+	room, ok := s.rooms[roomId]
 	if ok {
-		// TODO: better error handling
-		conn.Close()
-		return
+		_, ok = room[userId]
+		if ok {
+			conn.Close()
+			return
+		}
+	} else {
+		room = make(UserMap)
+		s.rooms[roomId] = room
 	}
 	newUser := NewUser(conn, roomId, userId, s.clientMessage, s.clientError)
 	for _, user := range room {
