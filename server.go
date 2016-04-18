@@ -23,7 +23,6 @@ type ServerConfig struct {
 
 // Server providing the script installation page and public API.
 type Server struct {
-	mutex         sync.Mutex
 	server        *server.AsyncServer
 	upgrader      *websocket.Upgrader
 	roomMap       *RoomMap
