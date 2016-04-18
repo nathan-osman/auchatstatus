@@ -13,9 +13,6 @@ import (
 	"sync"
 )
 
-// Map user IDs to *User instances.
-type UserMap map[int]*User
-
 // Server configuration.
 type ServerConfig struct {
 	Addr    string
@@ -29,7 +26,7 @@ type Server struct {
 	mutex         sync.Mutex
 	server        *server.AsyncServer
 	upgrader      *websocket.Upgrader
-	rooms         map[int]UserMap
+	roomMap       *RoomMap
 	clientMessage chan *Message
 	clientError   chan *User
 	stop          chan bool
@@ -48,8 +45,7 @@ func (s *Server) writeJSON(w http.ResponseWriter, i interface{}) {
 	w.Write(b)
 }
 
-// Upgrade the connection to websocket. Note that a client may only have a
-// single connection for each room they are in.
+// Upgrade the connection to websocket and add the user.
 func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 	var (
 		vars      = mux.Vars(r)
@@ -60,27 +56,9 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	room, ok := s.rooms[roomId]
-	if ok {
-		_, ok = room[userId]
-		if ok {
-			conn.Close()
-			return
-		}
-	} else {
-		room = make(UserMap)
-		s.rooms[roomId] = room
-	}
-	newUser := NewUser(conn, roomId, userId, s.clientMessage, s.clientError)
-	for _, user := range room {
-		s := user.State()
-		for _, msg := range s.Messages(user.RoomId, user.UserId) {
-			newUser.Send(msg)
-		}
-	}
-	room[userId] = newUser
+	s.roomMap.AddUser(
+		NewUser(conn, roomId, userId, s.clientMessage, s.clientError),
+	)
 }
 
 // Process a ping from the user.
@@ -90,42 +68,7 @@ func (s *Server) ping(w http.ResponseWriter, r *http.Request) {
 
 // Retrieve statistics about current users.
 func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
-	var (
-		numRooms = 0
-		numUsers = 0
-	)
-	s.mutex.Lock()
-	numRooms = len(s.rooms)
-	for _, room := range s.rooms {
-		numUsers += len(room)
-	}
-	s.mutex.Unlock()
-	s.writeJSON(w, map[string]int{
-		"num_rooms": numRooms,
-		"num_users": numUsers,
-	})
-}
-
-// Propagate the specified message to a room.
-func (s *Server) propagateMessage(msg *Message) {
-	for _, u := range s.rooms[msg.RoomId] {
-		u.Send(msg)
-	}
-}
-
-// Remove the specified user from the room they are in. If there are no more
-// users in the room, delete it - otherwise, notify the other users.
-func (s *Server) processError(u *User) {
-	delete(s.rooms[u.RoomId], u.UserId)
-	if len(s.rooms[u.RoomId]) == 0 {
-		delete(s.rooms, u.RoomId)
-	} else {
-		s.propagateMessage(&Message{
-			RoomId: u.RoomId,
-			UserId: u.UserId,
-			Type:   UserQuit,
-		})
-	}
+	s.writeJSON(w, s.roomMap.Stats())
 }
 
 // Listen for messages and propagate them as necessary.
@@ -136,16 +79,10 @@ func (s *Server) run() {
 	}()
 	for {
 		select {
-		case msg := <-s.clientMessage:
-			s.mutex.Lock()
-			if _, ok := s.rooms[msg.RoomId]; ok {
-				s.propagateMessage(msg)
-			}
-			s.mutex.Unlock()
+		case m := <-s.clientMessage:
+			s.roomMap.Broadcast(m)
 		case u := <-s.clientError:
-			s.mutex.Lock()
-			s.processError(u)
-			s.mutex.Unlock()
+			s.roomMap.RemoveUser(u)
 		case <-s.stop:
 			return
 		}
@@ -163,7 +100,7 @@ func NewServer(config *ServerConfig) (*Server, error) {
 					return true
 				},
 			},
-			rooms:         make(map[int]UserMap),
+			roomMap:       NewRoomMap(),
 			clientMessage: make(chan *Message),
 			clientError:   make(chan *User),
 			stop:          make(chan bool),

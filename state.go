@@ -18,28 +18,3 @@ func (s *State) Update(msg *Message) {
 		s.LastCharEntered = msg.Value
 	}
 }
-
-// Create a slice of messages representing the current state. Note that because
-//
-func (s *State) Messages(roomId, userId int) []*Message {
-	return []*Message{
-		&Message{
-			RoomId: roomId,
-			UserId: userId,
-			Type:   UserActive,
-			Value:  s.Active,
-		},
-		&Message{
-			RoomId: roomId,
-			UserId: userId,
-			Type:   UserPosition,
-			Value:  s.LastMessageRead,
-		},
-		&Message{
-			RoomId: roomId,
-			UserId: userId,
-			Type:   UserTyping,
-			Value:  s.LastCharEntered,
-		},
-	}
-}

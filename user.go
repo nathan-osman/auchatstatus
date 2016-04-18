@@ -63,10 +63,29 @@ func NewUser(conn *websocket.Conn, roomId, userId int, clientMessage chan<- *Mes
 }
 
 // Retrieve a copy of the current state.
-func (u *User) State() State {
+func (u *User) State() []*Message {
 	u.mutex.Lock()
 	defer u.mutex.Unlock()
-	return u.state
+	return []*Message{
+		&Message{
+			RoomId: u.RoomId,
+			UserId: u.UserId,
+			Type:   UserActive,
+			Value:  u.state.Active,
+		},
+		&Message{
+			RoomId: u.RoomId,
+			UserId: u.UserId,
+			Type:   UserPosition,
+			Value:  u.state.LastMessageRead,
+		},
+		&Message{
+			RoomId: u.RoomId,
+			UserId: u.UserId,
+			Type:   UserTyping,
+			Value:  u.state.LastCharEntered,
+		},
+	}
 }
 
 // Send a message to the specified user. It is assumed that a socket error has
