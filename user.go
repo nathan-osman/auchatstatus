@@ -11,6 +11,7 @@ import (
 type User struct {
 	RoomId        int
 	UserId        int
+	Send          chan<- *Message
 	conn          *websocket.Conn
 	mutex         sync.Mutex
 	state         State
@@ -20,7 +21,7 @@ type User struct {
 
 // Process messages from the socket until an error is received, at which point
 // the "quit" message should be sent to other connected peers.
-func (u *User) run() {
+func (u *User) read() {
 	for {
 		messageType, r, err := u.conn.NextReader()
 		if err != nil {
@@ -49,16 +50,28 @@ func (u *User) run() {
 	u.clientError <- u
 }
 
+// Consolidate writes to the socket into a single goroutine.
+func (u *User) write(sendChan <-chan *Message) {
+	for msg := range sendChan {
+		if err := u.conn.WriteJSON(msg); err != nil {
+			u.clientError <- u
+		}
+	}
+}
+
 // Create a new user from the WebSocket.
 func NewUser(conn *websocket.Conn, roomId, userId int, clientMessage chan<- *Message, clientError chan<- *User) *User {
+	sendChan := make(chan *Message)
 	u := &User{
 		RoomId:        roomId,
 		UserId:        userId,
+		Send:          sendChan,
 		conn:          conn,
 		clientMessage: clientMessage,
 		clientError:   clientError,
 	}
-	go u.run()
+	go u.read()
+	go u.write(sendChan)
 	return u
 }
 
@@ -85,13 +98,5 @@ func (u *User) State() []*Message {
 			Type:   UserTyping,
 			Value:  u.state.LastCharEntered,
 		},
-	}
-}
-
-// Send a message to the specified user. It is assumed that a socket error has
-// occurred if the data cannot be written to the socket.
-func (u *User) Send(msg *Message) {
-	if err := u.conn.WriteJSON(msg); err != nil {
-		u.clientError <- u
 	}
 }
