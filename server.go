@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"sync"
 )
 
 // Server configuration.
