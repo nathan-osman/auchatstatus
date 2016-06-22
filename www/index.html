@@ -219,7 +219,7 @@
                  */
                 function refresh() {
                     function pl(i, s, p) {
-                        return i.length == 1 ? s : p;
+                        return i == 1 ? s : p;
                     }
                     function schedule() {
                         window.setTimeout(refresh, 30000);

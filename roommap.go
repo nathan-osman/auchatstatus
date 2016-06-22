@@ -28,7 +28,7 @@ func (r *RoomMap) update(user *User) {
 	for e := r.rooms[user.RoomId].Front(); e != nil; e = e.Next() {
 		go func(u *User) {
 			for _, m := range u.State() {
-				user.Send(m)
+				user.Send <- m
 			}
 		}(e.Value.(*User))
 	}
@@ -39,7 +39,7 @@ func (r *RoomMap) update(user *User) {
 func (r *RoomMap) broadcast(msg *Message) {
 	for e := r.rooms[msg.RoomId].Front(); e != nil; e = e.Next() {
 		go func(u *User) {
-			u.Send(msg)
+			u.Send <- msg
 		}(e.Value.(*User))
 	}
 }
@@ -72,6 +72,7 @@ func (r *RoomMap) RemoveUser(user *User) {
 	defer r.mutex.Unlock()
 	room := r.rooms[user.RoomId]
 	room.Remove(r.findUser(user))
+	close(user.Send)
 	if room.Len() == 0 {
 		delete(r.rooms, user.RoomId)
 	} else {
