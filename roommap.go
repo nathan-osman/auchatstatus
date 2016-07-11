@@ -97,14 +97,16 @@ func (r *RoomMap) Stats() interface{} {
 	defer r.mutex.Unlock()
 	var (
 		numRooms = 0
-		numUsers = 0
+		userMap  = make(map[int]int)
 	)
 	for _, room := range r.rooms {
 		numRooms++
-		numUsers += room.Len()
+		for e := room.Front(); e != nil; e = e.Next() {
+			userMap[e.Value.(*User).UserId]++
+		}
 	}
 	return map[string]int{
 		"num_rooms": numRooms,
-		"num_users": numUsers,
+		"num_users": len(userMap),
 	}
 }
