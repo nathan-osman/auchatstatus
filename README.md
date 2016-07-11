@@ -11,7 +11,7 @@ This handly little Go application and its accompanying UserScript provides the f
 
 ### Installation
 
-You can install the script by visiting the following website:  
+You can install the script by visiting the following website:
 https://sechat.quickmediasolutions.com/
 
 ### Building the Server
@@ -19,6 +19,8 @@ https://sechat.quickmediasolutions.com/
 The server is written in Go and can be compiled with the following command:
 
     go install github.com/nathan-osman/auchatstatus
+
+**Note:** a bug exists in versions of Go earlier than 1.6 that can cause issues with the sockets.
 
 ### Running the Server
 
