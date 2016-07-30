@@ -14,4 +14,5 @@ RUN go install github.com/nathan-osman/auchatstatus
 EXPOSE 8000
 
 # Set the command to run
-CMD auchatstatus
+CMD auchatstatus \
+    -root /go/src/github.com/nathan-osman/auchatstatus
