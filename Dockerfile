@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:alpine
 MAINTAINER Nathan Osman <nathan@quickmediasolutions.com>
 
 # Add the source files
