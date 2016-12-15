@@ -1,3 +1,5 @@
+> **Notice:** this project is now abandoned. It has been superceded by its more-than-capable replacement [sechatr](https://github.com/nathan-osman/sechatr). Please visit the project page to learn more.
+
 ## Ask Ubuntu Chat Status
 
 This handly little Go application and its accompanying UserScript provides the following features:
